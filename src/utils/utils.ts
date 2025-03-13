@@ -1,6 +1,6 @@
 import { Image, LocalStorage } from '@raycast/api'
 import axios from 'axios'
-import { Card, ClassName, Deck } from '../types/types'
+import { Card, ClassName, Deck, MatchResult } from '../types/types'
 
 export const classIcon = (className: ClassName) => {
   // 创建职业名称到图片文件名的映射
@@ -84,12 +84,6 @@ export const findCard = (
       .trim()
 
   const normalizedTitle = normalizeString(cardTitle)
-
-  // 匹配结果的类型
-  interface MatchResult {
-    card: Card
-    matchScore: number
-  }
 
   const matchResults: MatchResult[] = cardDataArray
     .map(card => {

@@ -1,29 +1,10 @@
 import { Action, ActionPanel, Grid, Icon, List } from '@raycast/api'
 import { usePromise } from '@raycast/utils'
 import { useEffect, useState } from 'react'
-import { CardSlot, ClassName } from '../types/types'
+import { Card, DeckDetailsProps, DeckListProps } from '../types/types'
 import { gethsguruBestDecks, gethsguruBestDecksByClass } from '../utils/hsguru'
 import { classIcon, ellipsize, findCard, formatDust, formatWinrate, getAmountEmoji, getLocalCardData, getRarityColor } from '../utils/utils'
 import { CardDetailView } from './card-detail-view'
-
-// 定义卡牌数据类型
-interface CardData {
-  id: string
-  name: string
-  cost: number
-  mana: number
-  cardClass?: string
-  rarity?: string
-  type?: string
-  collectible: boolean
-  dbfId: number
-}
-
-type DeckListProps = {
-  className?: ClassName
-  format?: number
-  minGames?: number
-}
 
 export const DeckList: React.FC<DeckListProps> = ({ className, format = 1, minGames }) => {
   const { data: decks, isLoading: decksLoading } = className
@@ -31,7 +12,8 @@ export const DeckList: React.FC<DeckListProps> = ({ className, format = 1, minGa
     : usePromise(gethsguruBestDecks, [format], {})
 
   // 使用本地卡牌数据
-  const [cardData, setCardData] = useState<CardData[]>([])
+  const [cardData, setCardData] = useState<Card[]>([])
+
   const [cardsLoading, setCardsLoading] = useState(true)
 
   useEffect(() => {
@@ -91,15 +73,6 @@ export const DeckList: React.FC<DeckListProps> = ({ className, format = 1, minGa
       ))}
     </Grid>
   )
-}
-
-interface DeckDetailsProps {
-  title: string
-  slots: CardSlot[]
-  cardData: CardData[]
-  deckCode: string
-  className: string
-  format: number
 }
 
 function DeckDetails({ title, slots, cardData, deckCode, className }: DeckDetailsProps) {

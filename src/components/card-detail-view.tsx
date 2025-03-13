@@ -1,15 +1,8 @@
 import { Action, ActionPanel, Detail, Icon } from '@raycast/api'
 import { useEffect, useState } from 'react'
 import { CardImageLanguage, getDefaultCardImageLanguage } from '../preferences'
-import { Card, CardSlot } from '../types/types'
-// import { getRarityColor } from './utils'
-
-interface CardDetailViewProps {
-  slot?: Partial<CardSlot>
-  card?: Partial<Card> | null
-  deckCode?: string
-  language?: 'enUS' | 'zhCN'
-}
+import { Card, CardDetailViewProps, CardSlot } from '../types/types'
+import { getRarityColor } from './utils'
 
 export function CardDetailView({ 
   slot = {}, 
@@ -61,6 +54,7 @@ export function CardDetailView({
   const cardId = safeCard.id
   const dbfId = safeCard.dbfId.toString()
   const cardName = safeCard.name
+  const cost = safeCard.cost
   const set = safeCard.set
   const type = safeCard.type
   const attack = safeCard.attack?.toString() ?? '0'
@@ -120,10 +114,7 @@ ${imageUrl ? `![${cardName}](${imageUrl})` : '*Card image not found*'}
 
 ${safeCard.text ? `**Card Text:**\n\n${safeCard.text}` : ''}
 
-${safeCard.flavor ? `*Flavor Text:*\n\n${safeCard.flavor}` : ''}
-${safeCard.id ? `*ID Text:*\n\n${safeCard.id}` : ''}
-
-${safeCard.dbfId ? `*dbfId Text:*\n\n${safeCard.dbfId}` : ''}
+${safeCard.flavor ? `**Flavor Text:**\n\n${safeCard.flavor}` : ''}
   `
 
   return (
@@ -149,7 +140,7 @@ ${safeCard.dbfId ? `*dbfId Text:*\n\n${safeCard.dbfId}` : ''}
           />
           <Detail.Metadata.Label 
             title="Mana Cost" 
-            text={`♦  ${safeCard.mana.toString().padStart(3, '0')}`} 
+            text={`♦  ${cost}`} 
           />
           <Detail.Metadata.Label 
             title="Collectible" 
