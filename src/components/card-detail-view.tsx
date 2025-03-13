@@ -2,12 +2,12 @@ import { Action, ActionPanel, Detail, Icon } from '@raycast/api'
 import { useEffect, useState } from 'react'
 import { CardImageLanguage, getDefaultCardImageLanguage } from '../preferences'
 import { Card, CardDetailViewProps, CardSlot } from '../types/types'
-import { getRarityColor } from './utils'
+import { getLocalCardData } from '../utils/utils'
 
 export function CardDetailView({ 
   slot = {}, 
   card = null, 
-  language = 'enUS'
+  language = 'enUS',
 }: CardDetailViewProps) {
   const safeSlot: CardSlot = {
     card: {
@@ -15,23 +15,23 @@ export function CardDetailView({
       cost: slot?.card?.cost ?? 0,
       collectible: slot?.card?.collectible ?? false,
       rarity: slot?.card?.rarity || 'Unknown',
-      id: '',
-      dbfId: 0,
+      id: slot?.card?.id || '',
+      dbfId: slot?.card?.dbfId || 0,
       mana: slot?.card?.mana ?? 0
     },
     amount: slot?.amount ?? 1
   }
 
-  const safeCard: Card = {
+  const [safeCard, setSafeCard] = useState<Card>({
     name: card?.name || safeSlot.card.name,
     cost: card?.cost ?? safeSlot.card.cost,
     cardClass: card?.cardClass || 'NEUTRAL',
     collectible: card?.collectible ?? false,
-    id: card?.id || '',
-    dbfId: card?.dbfId || 0,
-    mana: card?.mana ?? 0,
-    attack: card?.attack ?? 0,
-    health: card?.health ?? 0,
+    id: card?.id || safeSlot.card.id || '',
+    dbfId: card?.dbfId || safeSlot.card.dbfId || 0,
+    mana: card?.mana || safeSlot.card.mana || 0,
+    attack: card?.attack || 0,
+    health: card?.health || 0,
     mechanics: card?.mechanics || [],
     rarity: card?.rarity || safeSlot.card.rarity,
     text: card?.text || '',
@@ -40,32 +40,65 @@ export function CardDetailView({
     set: card?.set || '',
     elite: card?.elite || false,
     faction: card?.faction || ''
-  }
+  })
 
   const [cardImageLanguage, setCardImageLanguage] = useState<CardImageLanguage>(
     language === 'enUS' ? CardImageLanguage.ENGLISH : CardImageLanguage.CHINESE
   )
+  
+  // 为UI语言添加独立状态
+  const [uiLanguage, setUiLanguage] = useState<'enUS' | 'zhCN'>(
+    language === 'enUS' ? 'enUS' : 'zhCN'
+  )
+
+  // 当卡牌语言改变时重新获取卡牌数据
+  useEffect(() => {
+    const fetchCardData = async () => {
+      if (safeCard.id) {
+        const allCards = await getLocalCardData(cardImageLanguage === CardImageLanguage.ENGLISH ? 'enUS' : 'zhCN')
+        const updatedCard = allCards.find((c: Card) => c.id === safeCard.id || c.dbfId === safeCard.dbfId)
+        if (updatedCard) {
+          setSafeCard({
+            ...safeCard,
+            name: updatedCard.name || safeCard.name,
+            text: updatedCard.text || safeCard.text,
+            flavor: updatedCard.flavor || safeCard.flavor,
+            type: updatedCard.type || safeCard.type,
+            set: updatedCard.set || safeCard.set,
+            rarity: updatedCard.rarity || safeCard.rarity,
+            faction: updatedCard.faction || safeCard.faction,
+            mechanics: updatedCard.mechanics || safeCard.mechanics
+          })
+        }
+      }
+    }
+    
+    fetchCardData()
+  }, [cardImageLanguage])
 
   useEffect(() => {
     const defaultLanguage = getDefaultCardImageLanguage()
     setCardImageLanguage(defaultLanguage)
+    setUiLanguage(defaultLanguage === CardImageLanguage.ENGLISH ? 'enUS' : 'zhCN')
   }, [])
 
-  const cardId = safeCard.id
-  const dbfId = safeCard.dbfId.toString()
+  // const cardId = safeCard.id
+  // const dbfId = safeCard.dbfId.toString()
   const cardName = safeCard.name
   const cost = safeCard.cost
-  const set = safeCard.set
-  const type = safeCard.type
-  const attack = safeCard.attack?.toString() ?? '0'
-  const health = safeCard.health?.toString() ?? '0'
-  const elite = safeCard.elite ? 'Yes' : 'No'
-  const faction = safeCard.faction ?? ''
-  const mechanics = safeCard.mechanics?.join(', ') ?? ''
-  const rarity = safeCard.rarity
+  // const flavor = safeCard.flavor
+  // const set = safeCard.set
+  // const type = safeCard.type
+  // const attack = safeCard.attack
+  // const health = safeCard.health
+  // const elite = safeCard.elite ? 'Yes' : 'No'
+  // const faction = safeCard.faction || 'None'
+  // const mechanics = safeCard.mechanics?.length > 0 ? safeCard.mechanics.join(', ') : 'None'
+  // const rarity = safeCard.rarity
   
   const cardClass = safeCard.cardClass?.toUpperCase() || 'NEUTRAL'
 
+  // 英文职业名称映射
   const classNameMap: Record<string, string> = {
     'DEATHKNIGHT': 'Death Knight',
     'DEMONHUNTER': 'Demon Hunter',
@@ -79,6 +112,75 @@ export function CardDetailView({
     'SHAMAN': 'Shaman',
     'WARLOCK': 'Warlock',
     'WARRIOR': 'Warrior'
+  }
+
+  // 中文职业名称映射
+  const classNameMapCN: Record<string, string> = {
+    'DEATHKNIGHT': '死亡骑士',
+    'DEMONHUNTER': '恶魔猎手',
+    'DRUID': '德鲁伊',
+    'HUNTER': '猎人',
+    'MAGE': '法师',
+    'NEUTRAL': '中立',
+    'PALADIN': '圣骑士',
+    'PRIEST': '牧师',
+    'ROGUE': '潜行者',
+    'SHAMAN': '萨满祭司',
+    'WARLOCK': '术士',
+    'WARRIOR': '战士'
+  }
+
+  // 界面文本翻译字典
+  const uiTranslations: Record<string, Record<string, string>> = {
+    'enUS': {
+      'Card Name': 'Card Name',
+      'Card ID': 'Card ID',
+      'DBF ID': 'DBF ID',
+      'Type': 'Type',
+      'Set': 'Set',
+      'Rarity': 'Rarity',
+      'Elite': 'Elite',
+      'Faction': 'Faction',
+      'Mechanics': 'Mechanics',
+      'Class': 'Class',
+      'Mana Cost': 'Mana Cost',
+      'Collectible': 'Collectible',
+      'Card Language': 'Card Language',
+      'Yes': 'Yes',
+      'No': 'No',
+      'English': 'English',
+      'Chinese': 'Chinese',
+      'None': 'None',
+      'Card Text': 'Card Text',
+      'Flavor Text': 'Flavor Text',
+    },
+    'zhCN': {
+      'Card Name': '卡牌名称',
+      'Card ID': '卡牌ID',
+      'DBF ID': '数据库ID',
+      'Type': '类型',
+      'Set': '系列',
+      'Rarity': '稀有度',
+      'Elite': '精英',
+      'Faction': '阵营',
+      'Mechanics': '机制',
+      'Class': '职业',
+      'Mana Cost': '法力值消耗',
+      'Collectible': '可收集',
+      'Card Language': '卡牌语言',
+      'Yes': '是',
+      'No': '否',
+      'English': '英文',
+      'Chinese': '中文',
+      'None': '无',
+      'Card Text': '卡牌文本',
+      'Flavor Text': '风味文本',
+    }
+  }
+
+  // 翻译函数
+  const t = (key: string): string => {
+    return uiTranslations[uiLanguage][key] || key
   }
 
   const classSymbolMap: Record<string, string> = {
@@ -107,48 +209,62 @@ export function CardDetailView({
         ? CardImageLanguage.CHINESE 
         : CardImageLanguage.ENGLISH
     )
+    // 同步切换UI语言
+    setUiLanguage(
+      cardImageLanguage === CardImageLanguage.ENGLISH
+        ? 'zhCN'
+        : 'enUS'
+    )
   }
 
+  // const toggleUILanguage = () => {
+  //   setUiLanguage(uiLanguage === 'enUS' ? 'zhCN' : 'enUS')
+  // }
   const markdown = `
 ${imageUrl ? `![${cardName}](${imageUrl})` : '*Card image not found*'}
 
-${safeCard.text ? `**Card Text:**\n\n${safeCard.text}` : ''}
-
-${safeCard.flavor ? `**Flavor Text:**\n\n${safeCard.flavor}` : ''}
+${safeCard.flavor ? `> ${safeCard.flavor}` : ''}
   `
-
   return (
     <Detail
       markdown={markdown}
-      navigationTitle={`${cardName} Details`}
+      navigationTitle={`${cardName} ${t('Details')}`}
       metadata={
         <Detail.Metadata>
-          <Detail.Metadata.Label title="Card Name" text={cardName} />
-          <Detail.Metadata.Label title="Card ID" text={cardId} />
-          <Detail.Metadata.Label title="DBF ID" text={dbfId} />
-          <Detail.Metadata.Label title="Type" text={type} />
-          <Detail.Metadata.Label title="Set" text={set} />
-          <Detail.Metadata.Label title="Attack" text={attack} />
-          <Detail.Metadata.Label title="Health" text={health} />
-          <Detail.Metadata.Label title="Rarity" text={rarity} />
-          <Detail.Metadata.Label title="Elite" text={elite} />
-          <Detail.Metadata.Label title="Faction" text={faction} />
-          <Detail.Metadata.Label title="Mechanics" text={mechanics} />
-          <Detail.Metadata.Label 
-            title="Class" 
-            text={`${classSymbolMap[cardClass] || '⚬'}  ${classNameMap[cardClass] || cardClass}`} 
+          <Detail.Metadata.Label title={t('Card Name')} text={cardName} />
+          {/*          <Detail.Metadata.Label title={t('Card ID')} text={cardId} />
+          <Detail.Metadata.Label title={t('DBF ID')} text={dbfId} />*/}
+          {/*          <Detail.Metadata.Label title={t('Type')} text={type} />
+          <Detail.Metadata.Label title={t('Set')} text={set} />
+          <Detail.Metadata.Label title={t('Rarity')} text={rarity} />*/}
+          {/*          <Detail.Metadata.Label title={t('Elite')} text={t(elite)} />
+          <Detail.Metadata.Label title={t('Faction')} text={faction} />
+          <Detail.Metadata.Label title={t('Mechanics')} text={mechanics} />*/}
+          {/*          <Detail.Metadata.Label 
+            title={t('Card Text')} 
+            text={`☸  ${cleanedText}`} 
           />
           <Detail.Metadata.Label 
-            title="Mana Cost" 
+            title={t('Flavor Text')} 
+            text={`☸  ${flavor}`} 
+          />*/}
+          <Detail.Metadata.Label 
+            title={t('Class')} 
+            text={`${classSymbolMap[cardClass] || '⚬'}  ${uiLanguage === 'enUS' ? 
+              (classNameMap[cardClass] || cardClass) : 
+              (classNameMapCN[cardClass] || cardClass)}`} 
+          />
+          <Detail.Metadata.Label 
+            title={t('Mana Cost')} 
             text={`♦  ${cost}`} 
           />
           <Detail.Metadata.Label 
-            title="Collectible" 
-            text={safeCard.collectible ? 'Yes' : 'No'} 
+            title={t('Collectible')} 
+            text={safeCard.collectible ? t('Yes') : t('No')} 
           />
           <Detail.Metadata.Label
-            title="Card Language"
-            text={cardImageLanguage === CardImageLanguage.ENGLISH ? 'English' : 'Chinese'}
+            title={t('Card Language')}
+            text={cardImageLanguage === CardImageLanguage.ENGLISH ? t('English') : t('Chinese')}
             icon={{ source: Icon.Globe }}
           />
         </Detail.Metadata>
@@ -156,7 +272,7 @@ ${safeCard.flavor ? `**Flavor Text:**\n\n${safeCard.flavor}` : ''}
       actions={
         <ActionPanel>
           <Action
-            title={cardImageLanguage === CardImageLanguage.ENGLISH ? 'Switch to Chinese Card' : 'Switch to English Card'}
+            title={cardImageLanguage === CardImageLanguage.ENGLISH ? '切换到中文卡牌' : 'Switch to English Card'}
             icon={Icon.Globe}
             onAction={toggleCardImageLanguage}
           />

@@ -1,4 +1,4 @@
-import { Action, ActionPanel, Grid, Icon } from '@raycast/api'
+import { Action, ActionPanel, Grid, Icon, List, showHUD } from '@raycast/api'
 import React, { useEffect, useState } from 'react'
 import { CardDetailView } from './components/card-detail-view'
 import { Card, ClassName } from './types/types'
@@ -14,8 +14,14 @@ export default function CardListCommand() {
   const [searchBySet, setSearchBySet] = useState<string>('all')
   const [allCardData, setAllCardData] = useState<Card[]>([])
   const [uniqueSets, setUniqueSets] = useState<string[]>(['all'])
+  
+  // 用于分页和加载更多
+  const [visibleCount, setVisibleCount] = useState(10)
+  const [filteredCards, setFilteredCards] = useState<Card[]>([])
+  const [hasMoreCards, setHasMoreCards] = useState(false)
 
-  const PAGE_SIZE = 10
+  const INITIAL_PAGE_SIZE = 10
+  const LOAD_MORE_SIZE = 10
 
   const classes = ['all', ...Object.values(ClassName), 'NEUTRAL']
 
@@ -27,7 +33,7 @@ export default function CardListCommand() {
         
         setAllCardData(data)
 
-        // 提取唯一的卡牌集并显式指定类型
+        // 提取唯一的卡牌集
         const cardSets = data
           .map((card: Card) => card.set)
           .filter((set: string | undefined): set is string => 
@@ -37,9 +43,11 @@ export default function CardListCommand() {
         const uniqueSetValues = ['all', ...Array.from(new Set<string>(cardSets))]
         setUniqueSets(uniqueSetValues)
         
-        // 仅加载可收集的卡牌，并显示前10条
+        // 仅加载可收集的卡牌
         const collectibleCards = data.filter((card: Card) => card.collectible)
-        setCards(collectibleCards.slice(0, PAGE_SIZE))
+        setFilteredCards(collectibleCards)
+        setCards(collectibleCards.slice(0, INITIAL_PAGE_SIZE))
+        setHasMoreCards(collectibleCards.length > INITIAL_PAGE_SIZE)
         
         setIsLoading(false)
       } catch (error) {
@@ -58,25 +66,28 @@ export default function CardListCommand() {
     setIsLoading(true)
     
     try {
-      let filteredCards = allCardData.filter((card: Card) => card.collectible)
+      let newFilteredCards = allCardData.filter((card: Card) => card.collectible)
       
       if (searchTerm) {
-        filteredCards = filteredCards.filter(card => 
+        newFilteredCards = newFilteredCards.filter(card => 
           card.name.toLowerCase().includes(searchTerm.toLowerCase())
         )
       }
       
       if (searchByCost !== 'all') {
-        filteredCards = filteredCards.filter(card => {
+        newFilteredCards = newFilteredCards.filter(card => {
+          // 处理 card.cost 可能为 undefined 的情况
+          const cost = card.cost ?? 0
+          
           if (searchByCost === '>10') {
-            return card.cost > 10
+            return cost > 10
           }
-          return card.cost === parseInt(searchByCost, 10)
+          return cost === parseInt(searchByCost, 10)
         })
       }
       
       if (searchByClass !== 'all') {
-        filteredCards = filteredCards.filter(card => {
+        newFilteredCards = newFilteredCards.filter(card => {
           if (searchByClass === 'NEUTRAL') {
             return card.cardClass === 'NEUTRAL'
           }
@@ -85,11 +96,15 @@ export default function CardListCommand() {
       }
       
       if (searchBySet !== 'all') {
-        filteredCards = filteredCards.filter(card => card.set === searchBySet)
+        newFilteredCards = newFilteredCards.filter(card => card.set === searchBySet)
       }
       
-      const displayCards = filteredCards.slice(0, PAGE_SIZE)
-      setCards(displayCards)
+      setFilteredCards(newFilteredCards)
+      
+      // 重置可见数量并显示初始卡牌
+      setVisibleCount(INITIAL_PAGE_SIZE)
+      setCards(newFilteredCards.slice(0, INITIAL_PAGE_SIZE))
+      setHasMoreCards(newFilteredCards.length > INITIAL_PAGE_SIZE)
     } catch (error) {
       console.error('Error applying filters:', error)
     } finally {
@@ -118,6 +133,19 @@ export default function CardListCommand() {
       case 'set':
         setSearchBySet(filterValue)
         break
+    }
+  }
+
+  // 加载更多卡牌（不关闭窗口）
+  const loadMoreCards = () => {
+    if (hasMoreCards && !isLoading) {
+      const newVisibleCount = visibleCount + LOAD_MORE_SIZE
+      setVisibleCount(newVisibleCount)
+      setCards(filteredCards.slice(0, newVisibleCount))
+      setHasMoreCards(filteredCards.length > newVisibleCount)
+      showHUD(`已加载 ${Math.min(newVisibleCount, filteredCards.length)}/${filteredCards.length} 张卡牌`)
+    } else if (!hasMoreCards) {
+      showHUD("已加载全部卡牌")
     }
   }
 
@@ -173,6 +201,21 @@ export default function CardListCommand() {
           </Grid.Dropdown.Section>
         </Grid.Dropdown>
       }
+      actions={
+        hasMoreCards ? (
+          <ActionPanel>
+            <Action
+              title="Load More Cards"
+              icon={Icon.Download}
+              shortcut={{ modifiers: ['cmd'], key: 'arrowDown' }}
+              onAction={() => {
+                loadMoreCards()
+                return { keepWindowOpen: true }
+              }}
+            />
+          </ActionPanel>
+        ) : undefined
+      }
     >
       {cards.length === 0 && !isLoading ? (
         <Grid.EmptyView 
@@ -193,6 +236,7 @@ export default function CardListCommand() {
             }
             actions={
               <ActionPanel>
+                {/* 详情查看 */}
                 <Action.Push
                   title="View Card Details"
                   target={
@@ -215,11 +259,26 @@ export default function CardListCommand() {
                     />
                   }
                 />
+                
+                {/* 加载更多卡牌的操作也加到每个卡牌的ActionPanel中 */}
+                {hasMoreCards && (
+                  <Action
+                    title="Load More Cards"
+                    icon={Icon.Download}
+                    shortcut={{ modifiers: ['cmd'], key: 'arrowDown' }}
+                    onAction={() => {
+                      loadMoreCards()
+                      return { keepWindowOpen: true }
+                    }}
+                  />
+                )}
               </ActionPanel>
             }
           />
         ))
       )}
+      
+      {/* 移除单独的"Load More Cards"网格项 */}
     </Grid>
   )
 }
