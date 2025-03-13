@@ -1,59 +1,130 @@
-import { Action, ActionPanel, Detail, Icon } from '@raycast/api';
-import { useEffect, useState } from 'react';
-import { CardSlot } from './domain';
-import { CardImageLanguage, getDefaultCardImageLanguage } from './preferences';
-import { getRarityColor } from './utils';
-
-interface CardData {
-  id?: string;
-  name?: string;
-  cost?: number;
-  rarity?: string;
-  type?: string;
-}
+import { Action, ActionPanel, Detail, Icon } from '@raycast/api'
+import { useEffect, useState } from 'react'
+import { Card, CardSlot } from './domain'
+import { CardImageLanguage, getDefaultCardImageLanguage } from './preferences'
+// import { getRarityColor } from './utils'
 
 interface CardDetailViewProps {
-  slot: CardSlot;
-  card: CardData | null;
-  deckCode: string;
+  slot?: Partial<CardSlot>
+  card?: Partial<Card> | null
+  deckCode?: string
+  language?: 'enUS' | 'zhCN'
 }
 
-export function CardDetailView({ slot, card }: CardDetailViewProps) {
-  const [cardImageLanguage, setCardImageLanguage] = useState<CardImageLanguage>(CardImageLanguage.ENGLISH);
+export function CardDetailView({ 
+  slot = {}, 
+  card = null, 
+  language = 'enUS'
+}: CardDetailViewProps) {
+  const safeSlot: CardSlot = {
+    card: {
+      name: slot?.card?.name || 'Unknown',
+      cost: slot?.card?.cost ?? 0,
+      collectible: slot?.card?.collectible ?? false,
+      rarity: slot?.card?.rarity || 'Unknown',
+      id: '',
+      dbfId: 0,
+      mana: slot?.card?.mana ?? 0
+    },
+    amount: slot?.amount ?? 1
+  }
 
-  // 组件加载时获取默认卡牌图片语言设置
+  const safeCard: Card = {
+    name: card?.name || safeSlot.card.name,
+    cost: card?.cost ?? safeSlot.card.cost,
+    cardClass: card?.cardClass || 'NEUTRAL',
+    collectible: card?.collectible ?? false,
+    id: card?.id || '',
+    dbfId: card?.dbfId || 0,
+    mana: card?.mana ?? 0,
+    attack: card?.attack ?? 0,
+    health: card?.health ?? 0,
+    mechanics: card?.mechanics || [],
+    rarity: card?.rarity || safeSlot.card.rarity,
+    text: card?.text || '',
+    flavor: card?.flavor || '',
+    type: card?.type || '',
+    set: card?.set || '',
+    elite: card?.elite || false,
+    faction: card?.faction || ''
+  }
+
+  const [cardImageLanguage, setCardImageLanguage] = useState<CardImageLanguage>(
+    language === 'enUS' ? CardImageLanguage.ENGLISH : CardImageLanguage.CHINESE
+  )
+
   useEffect(() => {
-    const defaultLanguage = getDefaultCardImageLanguage();
-    setCardImageLanguage(defaultLanguage);
-    console.log('Using default card image language:', defaultLanguage);
-  }, []);
+    const defaultLanguage = getDefaultCardImageLanguage()
+    setCardImageLanguage(defaultLanguage)
+  }, [])
 
-  const cardId = card?.id;
-  const cardName = card?.name || slot.card.title;
-  const mana = slot.card.mana;
-  const amount = slot.amount;
-  const rarity = slot.card.rarity || 'Unknown';
-  const rarityColor = getRarityColor(rarity);
+  const cardId = safeCard.id
+  const dbfId = safeCard.dbfId.toString()
+  const cardName = safeCard.name
+  const set = safeCard.set
+  const type = safeCard.type
+  const attack = safeCard.attack?.toString() ?? '0'
+  const health = safeCard.health?.toString() ?? '0'
+  const elite = safeCard.elite ? 'Yes' : 'No'
+  const faction = safeCard.faction ?? ''
+  const mechanics = safeCard.mechanics?.join(', ') ?? ''
+  const rarity = safeCard.rarity
+  
+  const cardClass = safeCard.cardClass?.toUpperCase() || 'NEUTRAL'
 
-  // 根据当前语言构建图片URL
-  const imageUrl = cardId
-    ? `https://art.hearthstonejson.com/v1/render/latest/${cardImageLanguage}/256x/${cardId}.png`
-    : null;
+  const classNameMap: Record<string, string> = {
+    'DEATHKNIGHT': 'Death Knight',
+    'DEMONHUNTER': 'Demon Hunter',
+    'DRUID': 'Druid',
+    'HUNTER': 'Hunter',
+    'MAGE': 'Mage',
+    'NEUTRAL': 'Neutral',
+    'PALADIN': 'Paladin',
+    'PRIEST': 'Priest',
+    'ROGUE': 'Rogue',
+    'SHAMAN': 'Shaman',
+    'WARLOCK': 'Warlock',
+    'WARRIOR': 'Warrior'
+  }
 
-  // 切换图片语言的处理函数
+  const classSymbolMap: Record<string, string> = {
+    'DEATHKNIGHT': '✠', 
+    'DEMONHUNTER': '☠', 
+    'DRUID': '⍟', 
+    'HUNTER': '⍉', 
+    'MAGE': '∗', 
+    'NEUTRAL': '○', 
+    'PALADIN': '⛨', 
+    'PRIEST': '✙', 
+    'ROGUE': '⚔', 
+    'SHAMAN': '☸︎', 
+    'WARLOCK': '⏣', 
+    'WARRIOR': '⊗'
+  }
+
+  const imageUrl = safeCard.id
+    ? `https://art.hearthstonejson.com/v1/render/latest/${cardImageLanguage === CardImageLanguage.ENGLISH ? 'enUS' : 'zhCN'
+    }/256x/${safeCard.id.replace(/^CORE_/, '')}.png`
+    : null
+
   const toggleCardImageLanguage = () => {
-    const newLanguage =
-      cardImageLanguage === CardImageLanguage.ENGLISH ? CardImageLanguage.CHINESE : CardImageLanguage.ENGLISH;
-    setCardImageLanguage(newLanguage);
-    console.log('Switched card image language to:', newLanguage);
-  };
-
-  // 判断当前是否使用中文图片
-  const isChineseImage = cardImageLanguage === CardImageLanguage.CHINESE;
+    setCardImageLanguage(
+      cardImageLanguage === CardImageLanguage.ENGLISH 
+        ? CardImageLanguage.CHINESE 
+        : CardImageLanguage.ENGLISH
+    )
+  }
 
   const markdown = `
 ${imageUrl ? `![${cardName}](${imageUrl})` : '*Card image not found*'}
-  `;
+
+${safeCard.text ? `**Card Text:**\n\n${safeCard.text}` : ''}
+
+${safeCard.flavor ? `*Flavor Text:*\n\n${safeCard.flavor}` : ''}
+${safeCard.id ? `*ID Text:*\n\n${safeCard.id}` : ''}
+
+${safeCard.dbfId ? `*dbfId Text:*\n\n${safeCard.dbfId}` : ''}
+  `
 
   return (
     <Detail
@@ -62,16 +133,31 @@ ${imageUrl ? `![${cardName}](${imageUrl})` : '*Card image not found*'}
       metadata={
         <Detail.Metadata>
           <Detail.Metadata.Label title="Card Name" text={cardName} />
-          <Detail.Metadata.Label title="Mana Cost" text={`[♦]  ${mana}`} />
-          <Detail.Metadata.Label
-            title="Rarity"
-            text={rarity}
-            icon={{ source: Icon.CircleFilled, tintColor: rarityColor }}
+          <Detail.Metadata.Label title="Card ID" text={cardId} />
+          <Detail.Metadata.Label title="DBF ID" text={dbfId} />
+          <Detail.Metadata.Label title="Type" text={type} />
+          <Detail.Metadata.Label title="Set" text={set} />
+          <Detail.Metadata.Label title="Attack" text={attack} />
+          <Detail.Metadata.Label title="Health" text={health} />
+          <Detail.Metadata.Label title="Rarity" text={rarity} />
+          <Detail.Metadata.Label title="Elite" text={elite} />
+          <Detail.Metadata.Label title="Faction" text={faction} />
+          <Detail.Metadata.Label title="Mechanics" text={mechanics} />
+          <Detail.Metadata.Label 
+            title="Class" 
+            text={`${classSymbolMap[cardClass] || '⚬'}  ${classNameMap[cardClass] || cardClass}`} 
           />
-          <Detail.Metadata.Label title="Amount in Deck" text={`[♠]  ${amount}`} />
+          <Detail.Metadata.Label 
+            title="Mana Cost" 
+            text={`♦  ${safeCard.mana.toString().padStart(3, '0')}`} 
+          />
+          <Detail.Metadata.Label 
+            title="Collectible" 
+            text={safeCard.collectible ? 'Yes' : 'No'} 
+          />
           <Detail.Metadata.Label
             title="Card Language"
-            text={isChineseImage ? 'Chinese' : 'English'}
+            text={cardImageLanguage === CardImageLanguage.ENGLISH ? 'English' : 'Chinese'}
             icon={{ source: Icon.Globe }}
           />
         </Detail.Metadata>
@@ -79,22 +165,22 @@ ${imageUrl ? `![${cardName}](${imageUrl})` : '*Card image not found*'}
       actions={
         <ActionPanel>
           <Action
-            title={isChineseImage ? 'Switch to English Card' : 'Switch to Chinese Card'}
+            title={cardImageLanguage === CardImageLanguage.ENGLISH ? 'Switch to Chinese Card' : 'Switch to English Card'}
             icon={Icon.Globe}
             onAction={toggleCardImageLanguage}
-            shortcut={{ modifiers: ['cmd'], key: 'l' }}
           />
           <Action.OpenInBrowser
             url="https://hearthstone.blizzard.com/en-us/cards"
-            title="Hearthstone Card Database (English)"
+            title="Hearthstone Card Database 🇺🇲"
+            shortcut={{ modifiers: ['cmd', 'shift'], key: 'e' }}
           />
           <Action.OpenInBrowser
             url="https://hs.blizzard.cn/cards"
-            title="Hearthstone Card Database (Chinese)"
-            shortcut={{ modifiers: ['cmd'], key: 'c' }}
+            title="Hearthstone Card Database 🇨🇳"
+            shortcut={{ modifiers: ['cmd', 'shift'], key: 'c' }}
           />
         </ActionPanel>
       }
     />
-  );
+  )
 }

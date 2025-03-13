@@ -12,18 +12,30 @@ export enum ClassName {
   DEATHKNIGHT = 'Death Knight',
 }
 
-export interface Deck {
-  title: string;
-  code: string;
-  className: ClassName;
-  winrate: number | null;
-  dust: number;
-  slots: CardSlot[];
+export interface Card {
+  id: string
+  dbfId: number
+  name: string
+  text?: string
+  flavor?: string
+  artist?: string
+  attack?: number
+  cardClass?: string
+  collectible: boolean
+  cost: number
+  mana: number
+  elite?: boolean
+  faction?: string
+  health?: number
+  mechanics?: string[]
+  rarity?: string
+  set?: string
+  type?: string
 }
 
 export interface CardSlot {
-  card: Card;
-  amount: 1 | 2;
+  card: Card
+  amount: 1 | 2
 }
 
 export enum Rarity {
@@ -33,8 +45,12 @@ export enum Rarity {
   LEGENDARY = 'Legendary',
 }
 
-export interface Card {
-  title: string;
-  rarity: Rarity;
-  mana: number;
+export interface Deck {
+  title: string
+  deckID: string
+  code: string
+  className: ClassName
+  winrate: number | null
+  dust: number
+  slots: CardSlot[]
 }

@@ -1,59 +1,55 @@
-import { Action, ActionPanel, Grid, Icon, List } from '@raycast/api';
-import { usePromise } from '@raycast/utils';
-import axios from 'axios';
-import { useEffect, useState } from 'react';
-import { CardDetailView } from './CardDetailView';
-import { CardSlot, ClassName } from './domain';
-import { gethsguruBestDecks, gethsguruBestDecksByClass } from './hsguru';
-import { classIcon, ellipsize, formatDust, formatWinrate, getLocalCardData, getRarityColor } from './utils';
+import { Action, ActionPanel, Grid, Icon, List } from '@raycast/api'
+import { usePromise } from '@raycast/utils'
+import { useEffect, useState } from 'react'
+import { CardDetailView } from './CardDetailView'
+import { CardSlot, ClassName } from './domain'
+import { gethsguruBestDecks, gethsguruBestDecksByClass } from './hsguru'
+import { classIcon, ellipsize, findCard, formatDust, formatWinrate, getAmountEmoji, getLocalCardData, getRarityColor } from './utils'
 
 // 定义卡牌数据类型
 interface CardData {
-  id: string;
-  name: string;
-  cost: number;
+  id: string
+  name: string
+  cost: number
+  mana: number
+  cardClass?: string
+  rarity?: string
+  type?: string
+  collectible: boolean
+  dbfId: number
 }
 
 type DeckListProps = {
-  className?: ClassName;
-  format?: number;
-  minGames?: number;
-};
+  className?: ClassName
+  format?: number
+  minGames?: number
+}
 
 export const DeckList: React.FC<DeckListProps> = ({ className, format = 1, minGames }) => {
   const { data: decks, isLoading: decksLoading } = className
     ? usePromise(gethsguruBestDecksByClass, [className, format, minGames], {})
-    : usePromise(gethsguruBestDecks, [format], {});
+    : usePromise(gethsguruBestDecks, [format], {})
 
   // 使用本地卡牌数据
-  const [cardData, setCardData] = useState<CardData[]>([]);
-  const [cardsLoading, setCardsLoading] = useState(true);
+  const [cardData, setCardData] = useState<CardData[]>([])
+  const [cardsLoading, setCardsLoading] = useState(true)
 
   useEffect(() => {
     const loadCardData = async () => {
       try {
-        // 尝试获取卡牌数据
-        let data = await getLocalCardData();
-
-        // 如果数据为空，尝试从 API 获取
-        if (!data || data.length === 0) {
-          console.log('Fetching card data from API...');
-          const response = await axios.get('https://api.hearthstonejson.com/v1/latest/enUS/cards.json');
-          data = response.data;
-        }
-
-        setCardData(data);
+        const data = await getLocalCardData()
+        setCardData(data)
       } catch (error) {
-        console.error('Error loading card data:', error);
+        console.error('Error loading card data:', error)
       } finally {
-        setCardsLoading(false);
+        setCardsLoading(false)
       }
-    };
+    }
 
-    loadCardData();
-  }, []);
+    loadCardData()
+  }, [])
 
-  const isLoading = decksLoading || cardsLoading;
+  const isLoading = decksLoading || cardsLoading
 
   return (
     <Grid isLoading={isLoading} columns={5} inset={Grid.Inset.Medium} aspectRatio="1" fit={Grid.Fit.Fill}>
@@ -65,7 +61,7 @@ export const DeckList: React.FC<DeckListProps> = ({ className, format = 1, minGa
             tintColor: null,
           }}
           title={ellipsize(deck.title, 10)}
-          subtitle={`[↑]${formatWinrate(deck.winrate)}  [☺]${formatDust(deck.dust)}`}
+          subtitle={`▲ ${formatWinrate(deck.winrate)}    ♦ ${formatDust(deck.dust)}`}
           actions={
             <ActionPanel title={deck.title}>
               <ActionPanel.Section>
@@ -84,7 +80,9 @@ export const DeckList: React.FC<DeckListProps> = ({ className, format = 1, minGa
                 />
                 <Action.CopyToClipboard content={deck.code} title="Copy Deck Code" />
                 <Action.OpenInBrowser
+                  title='Open on HSGuru'
                   url={`https://www.hsguru.com/decks?format=${format}&player_class=${encodeURIComponent(deck.className)}`}
+                  shortcut={{ modifiers: ['cmd'], key: 'h' }}
                 />
               </ActionPanel.Section>
             </ActionPanel>
@@ -92,43 +90,59 @@ export const DeckList: React.FC<DeckListProps> = ({ className, format = 1, minGa
         />
       ))}
     </Grid>
-  );
-};
+  )
+}
 
-function DeckDetails({
-  title,
-  slots,
-  cardData,
-  deckCode,
-  className,
-  format,
-}: {
-  title: string;
-  slots: CardSlot[];
-  cardData: CardData[];
-  deckCode: string;
-  className: string;
-  format: number;
-}) {
+interface DeckDetailsProps {
+  title: string
+  slots: CardSlot[]
+  cardData: CardData[]
+  deckCode: string
+  className: string
+  format: number
+}
+
+function DeckDetails({ title, slots, cardData, deckCode, className }: DeckDetailsProps) {
+  const [searchTerm, setSearchTerm] = useState('')
+  const [searchByCost, setSearchByCost] = useState<number | undefined>(undefined)
+
+  // 过滤卡牌的逻辑
+  const filteredSlots = slots.filter(slot => {
+    // 名称搜索
+    const matchesName = !searchTerm || 
+      slot.card.name.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    // 费用搜索
+    const matchesCost = searchByCost === undefined || 
+      slot.card.cost === searchByCost
+
+    return matchesName && matchesCost
+  })
+
   return (
-    <List searchBarPlaceholder={`Browsing cards in: ${title}`}>
+    <List 
+      searchBarPlaceholder={`Browsing cards in: ${title}`}
+      searchText={searchTerm}
+      onSearchTextChange={setSearchTerm}
+      searchBarAccessory={
+        <Grid.Dropdown
+          tooltip="Filter by Mana Cost"
+          onChange={(value) => setSearchByCost(value === 'all' ? undefined : Number(value))}
+        >
+          <Grid.Dropdown.Item title="All Costs" value="all" />
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(cost => (
+            <Grid.Dropdown.Item 
+              key={cost} 
+              title={`Cost ${cost}`} 
+              value={cost.toString()} 
+            />
+          ))}
+        </Grid.Dropdown>
+      }
+    >
       <List.Section title={title} subtitle={`Class: ${className}`}>
-        {slots.map((slot, index) => {
-          // 查找卡牌数据
-          let card = cardData.find((c) => c.name?.toLowerCase() === slot.card.title.toLowerCase());
-
-          if (!card) {
-            card = cardData.find(
-              (c) =>
-                c.name &&
-                slot.card.title &&
-                (c.name.toLowerCase().includes(slot.card.title.toLowerCase()) ||
-                  slot.card.title.toLowerCase().includes(c.name.toLowerCase())),
-            );
-          }
-
-          // 创建卡牌稀有度显示
-          const rarityText = slot.card.rarity || 'Unknown';
+        {filteredSlots.map((slot, index) => {
+          const rarityText = slot.card.rarity || 'Unknown'
 
           return (
             <List.Item
@@ -137,29 +151,29 @@ function DeckDetails({
                 source: Icon.CircleFilled,
                 tintColor: getRarityColor(rarityText),
               }}
-              title={`${slot.card.title}  [♦]  ${slot.card.mana}`}
-              subtitle={`[♠] ${slot.amount}`}
-              accessories={[{ text: rarityText }]}
+              title={`${slot.card.name}`}
+              accessories={[
+                { text: rarityText },
+                { text: `♦${slot.card.mana?.toString().padStart(3, '0') ?? '000'}` },
+                { text: getAmountEmoji(slot.amount) }
+              ]}
               actions={
                 <ActionPanel>
                   <Action.Push
                     title="View Card Details"
-                    target={<CardDetailView slot={slot} card={card || null} deckCode={deckCode} />}
+                    target={<CardDetailView 
+                      slot={slot} 
+                      card={findCard(slot.card.name, cardData, slot.card.dbfId) || null} 
+                      deckCode={deckCode} />}
                     icon={Icon.Eye}
                   />
-
                   <Action.CopyToClipboard content={deckCode} title="Copy Deck Code" />
-                  <Action.OpenInBrowser
-                    shortcut={{ modifiers: ['cmd'], key: 'h' }}
-                    url={`https://www.hsguru.com/decks?format=${format}&player_class=${encodeURIComponent(className)}`}
-                    title="Open in HSGuru"
-                  />
                 </ActionPanel>
               }
             />
-          );
+          )
         })}
       </List.Section>
     </List>
-  );
+  )
 }

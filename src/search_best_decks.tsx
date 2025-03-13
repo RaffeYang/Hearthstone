@@ -1,42 +1,44 @@
-import { Action, ActionPanel, Grid, Icon, List } from '@raycast/api';
-import { usePromise } from '@raycast/utils';
-import axios from 'axios';
-import { useEffect, useState } from 'react';
-import { CardDetailView } from './CardDetailView';
-import { CardSlot } from './domain';
-import { gethsguruBestDecks } from './hsguru';
-import { classIcon, ellipsize, formatDust, formatWinrate, getLocalCardData, getRarityColor, type Card } from './utils';
+import { Action, ActionPanel, Grid, Icon, List } from '@raycast/api'
+import { usePromise } from '@raycast/utils'
+import { useEffect, useState } from 'react'
+import { CardDetailView } from './CardDetailView'
+import { Card, CardSlot } from './domain'
+import { gethsguruBestDecks } from './hsguru'
+import {
+  classIcon,
+  ellipsize,
+  findCard,
+  formatDust,
+  formatWinrate,
+  getAmountEmoji,
+  getLocalCardData,
+  getRarityColor
+} from './utils'
+
 
 export default function Command() {
-  const [format, setFormat] = useState(1);
-  const { data: decks, isLoading: decksLoading } = usePromise(gethsguruBestDecks, [format]);
+  const [format, setFormat] = useState(1)
+  const { data: decks, isLoading: decksLoading } = usePromise(gethsguruBestDecks, [format])
 
-  const [cardData, setCardData] = useState<Card[]>([]);
-  const [cardsLoading, setCardsLoading] = useState(true);
+  const [cardData, setCardData] = useState<Card[]>([])
+  const [cardsLoading, setCardsLoading] = useState(true)
 
   useEffect(() => {
     const loadCardData = async () => {
       try {
-        let data = await getLocalCardData();
-
-        if (!data || data.length === 0) {
-          console.log('Fetching card data from API...');
-          const response = await axios.get('https://api.hearthstonejson.com/v1/latest/enUS/cards.json');
-          data = response.data;
-        }
-
-        setCardData(data as Card[]);
+        const data = await getLocalCardData()
+        setCardData(data)
+        setCardsLoading(false)
       } catch (error) {
-        console.error('Error loading card data:', error);
-      } finally {
-        setCardsLoading(false);
+        console.error('Error loading card data:', error)
+        setCardsLoading(false)
       }
-    };
+    }
 
-    loadCardData();
-  }, []);
+    loadCardData()
+  }, [])
 
-  const isLoading = decksLoading || cardsLoading;
+  const isLoading = decksLoading || cardsLoading
 
   return (
     <Grid
@@ -62,7 +64,7 @@ export default function Command() {
             tintColor: null,
           }}
           title={ellipsize(deck.title, 10)}
-          subtitle={`[↑]${formatWinrate(deck.winrate)}  [☺]${formatDust(deck.dust)}`}
+          subtitle={`▲ ${formatWinrate(deck.winrate)}    ♦ ${formatDust(deck.dust)}`}
           actions={
             <ActionPanel title={deck.title}>
               <ActionPanel.Section>
@@ -87,7 +89,7 @@ export default function Command() {
         />
       ))}
     </Grid>
-  );
+  )
 }
 
 function DeckDetails({
@@ -96,34 +98,27 @@ function DeckDetails({
   cardData,
   deckCode,
   className,
-  format,
 }: {
-  title: string;
-  slots: CardSlot[];
-  cardData: Card[];
-  deckCode: string;
-  className: string;
-  format: number;
+  title: string
+  slots: CardSlot[]
+  cardData: Card[]
+  deckCode: string
+  className: string
+  format: number
 }) {
   return (
     <List searchBarPlaceholder={`Browsing cards in: ${title}`}>
       <List.Section title={title} subtitle={`Class: ${className}`}>
         {slots.map((slot, index) => {
-          // 查找卡牌数据
-          let card = cardData.find((c) => c.name?.toLowerCase() === slot.card.title.toLowerCase());
+          // 使用 ID 优先匹配
+          const card = findCard(
+            slot.card.name, 
+            cardData, 
+            // 尝试从 slot 中获取 ID（如果有的话）
+            slot.card.id
+          )
 
-          if (!card) {
-            card = cardData.find(
-              (c) =>
-                c.name &&
-                slot.card.title &&
-                (c.name.toLowerCase().includes(slot.card.title.toLowerCase()) ||
-                  slot.card.title.toLowerCase().includes(c.name.toLowerCase())),
-            );
-          }
-
-          // 创建卡牌稀有度显示
-          const rarityText = slot.card.rarity || 'Unknown';
+          const rarityText = slot.card.rarity || 'Unknown'
 
           return (
             <List.Item
@@ -132,9 +127,12 @@ function DeckDetails({
                 source: Icon.CircleFilled,
                 tintColor: getRarityColor(rarityText),
               }}
-              title={`${slot.card.title} [♦]  ${slot.card.mana}`}
-              subtitle={`[♠] ${slot.amount}`}
-              accessories={[{ text: rarityText }]}
+              title={`${slot.card.name}`}
+              accessories={[
+                { text: rarityText },
+                { text: `♦${slot.card.mana.toString().padStart(3, '0')}` },
+                { text: getAmountEmoji(slot.amount) }
+              ]}
               actions={
                 <ActionPanel>
                   <Action.Push
@@ -143,13 +141,12 @@ function DeckDetails({
                     icon={Icon.Eye}
                   />
                   <Action.CopyToClipboard content={deckCode} title="Copy Deck Code" />
-                  <Action.OpenInBrowser url={`https://www.hsguru.com/decks?format=${format}`} title="Open in HSGuru" />
                 </ActionPanel>
               }
             />
-          );
+          )
         })}
       </List.Section>
     </List>
-  );
+  )
 }
