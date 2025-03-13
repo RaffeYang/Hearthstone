@@ -129,7 +129,7 @@ function DeckDetails({
               title={`${slot.card.name}`}
               accessories={[
                 { text: rarityText },
-                { text: `♦${slot.card.mana.toString().padStart(3, '0')}` },
+                { text: `♦${(slot.card.mana ?? 0).toString().padStart(3, '0')}` },
                 { text: getAmountEmoji(slot.amount) },
               ]}
               actions={
