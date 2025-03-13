@@ -1,37 +1,46 @@
-import { Action, ActionPanel, Grid, Icon, List } from '@raycast/api'
-import { usePromise } from '@raycast/utils'
-import { useEffect, useState } from 'react'
-import { Card, DeckDetailsProps, DeckListProps } from '../types/types'
-import { gethsguruBestDecks, gethsguruBestDecksByClass } from '../utils/hsguru'
-import { classIcon, ellipsize, findCard, formatDust, formatWinrate, getAmountEmoji, getLocalCardData, getRarityColor } from '../utils/utils'
-import { CardDetailView } from './card-detail-view'
+import { Action, ActionPanel, Grid, Icon, List } from '@raycast/api';
+import { usePromise } from '@raycast/utils';
+import { useEffect, useState } from 'react';
+import { Card, DeckDetailsProps, DeckListProps } from '../types/types';
+import { gethsguruBestDecks, gethsguruBestDecksByClass } from '../utils/hsguru';
+import {
+  classIcon,
+  ellipsize,
+  findCard,
+  formatDust,
+  formatWinrate,
+  getAmountEmoji,
+  getLocalCardData,
+  getRarityColor,
+} from '../utils/utils';
+import { CardDetailView } from './card-detail-view';
 
 export const DeckList: React.FC<DeckListProps> = ({ className, format = 1, minGames }) => {
   const { data: decks, isLoading: decksLoading } = className
     ? usePromise(gethsguruBestDecksByClass, [className, format, minGames], {})
-    : usePromise(gethsguruBestDecks, [format], {})
+    : usePromise(gethsguruBestDecks, [format], {});
 
   // 使用本地卡牌数据
-  const [cardData, setCardData] = useState<Card[]>([])
+  const [cardData, setCardData] = useState<Card[]>([]);
 
-  const [cardsLoading, setCardsLoading] = useState(true)
+  const [cardsLoading, setCardsLoading] = useState(true);
 
   useEffect(() => {
     const loadCardData = async () => {
       try {
-        const data = await getLocalCardData()
-        setCardData(data)
+        const data = await getLocalCardData();
+        setCardData(data);
       } catch (error) {
-        console.error('Error loading card data:', error)
+        console.error('Error loading card data:', error);
       } finally {
-        setCardsLoading(false)
+        setCardsLoading(false);
       }
-    }
+    };
 
-    loadCardData()
-  }, [])
+    loadCardData();
+  }, []);
 
-  const isLoading = decksLoading || cardsLoading
+  const isLoading = decksLoading || cardsLoading;
 
   return (
     <Grid isLoading={isLoading} columns={5} inset={Grid.Inset.Medium} aspectRatio="1" fit={Grid.Fit.Fill}>
@@ -62,7 +71,7 @@ export const DeckList: React.FC<DeckListProps> = ({ className, format = 1, minGa
                 />
                 <Action.CopyToClipboard content={deck.code} title="Copy Deck Code" />
                 <Action.OpenInBrowser
-                  title='Open on HSGuru'
+                  title="Open on HSGuru"
                   url={`https://www.hsguru.com/decks?format=${format}&player_class=${encodeURIComponent(deck.className)}`}
                   shortcut={{ modifiers: ['cmd'], key: 'h' }}
                 />
@@ -72,28 +81,26 @@ export const DeckList: React.FC<DeckListProps> = ({ className, format = 1, minGa
         />
       ))}
     </Grid>
-  )
-}
+  );
+};
 
 function DeckDetails({ title, slots, cardData, deckCode, className }: DeckDetailsProps) {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [searchByCost, setSearchByCost] = useState<number | undefined>(undefined)
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchByCost, setSearchByCost] = useState<number | undefined>(undefined);
 
   // 过滤卡牌的逻辑
-  const filteredSlots = slots.filter(slot => {
+  const filteredSlots = slots.filter((slot) => {
     // 名称搜索
-    const matchesName = !searchTerm || 
-      slot.card.name.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    // 费用搜索
-    const matchesCost = searchByCost === undefined || 
-      slot.card.cost === searchByCost
+    const matchesName = !searchTerm || slot.card.name.toLowerCase().includes(searchTerm.toLowerCase());
 
-    return matchesName && matchesCost
-  })
+    // 费用搜索
+    const matchesCost = searchByCost === undefined || slot.card.cost === searchByCost;
+
+    return matchesName && matchesCost;
+  });
 
   return (
-    <List 
+    <List
       searchBarPlaceholder={`Browsing cards in: ${title}`}
       searchText={searchTerm}
       onSearchTextChange={setSearchTerm}
@@ -103,19 +110,15 @@ function DeckDetails({ title, slots, cardData, deckCode, className }: DeckDetail
           onChange={(value) => setSearchByCost(value === 'all' ? undefined : Number(value))}
         >
           <Grid.Dropdown.Item title="All Costs" value="all" />
-          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(cost => (
-            <Grid.Dropdown.Item 
-              key={cost} 
-              title={`Cost ${cost}`} 
-              value={cost.toString()} 
-            />
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((cost) => (
+            <Grid.Dropdown.Item key={cost} title={`Cost ${cost}`} value={cost.toString()} />
           ))}
         </Grid.Dropdown>
       }
     >
       <List.Section title={title} subtitle={`Class: ${className}`}>
         {filteredSlots.map((slot, index) => {
-          const rarityText = slot.card.rarity || 'Unknown'
+          const rarityText = slot.card.rarity || 'Unknown';
 
           return (
             <List.Item
@@ -128,25 +131,28 @@ function DeckDetails({ title, slots, cardData, deckCode, className }: DeckDetail
               accessories={[
                 { text: rarityText },
                 { text: `♦${slot.card.mana?.toString().padStart(3, '0') ?? '000'}` },
-                { text: getAmountEmoji(slot.amount) }
+                { text: getAmountEmoji(slot.amount) },
               ]}
               actions={
                 <ActionPanel>
                   <Action.Push
                     title="View Card Details"
-                    target={<CardDetailView 
-                      slot={slot} 
-                      card={findCard(slot.card.name, cardData, slot.card.dbfId) || null} 
-                      deckCode={deckCode} />}
+                    target={
+                      <CardDetailView
+                        slot={slot}
+                        card={findCard(slot.card.name, cardData, slot.card.dbfId) || null}
+                        deckCode={deckCode}
+                      />
+                    }
                     icon={Icon.Eye}
                   />
                   <Action.CopyToClipboard content={deckCode} title="Copy Deck Code" />
                 </ActionPanel>
               }
             />
-          )
+          );
         })}
       </List.Section>
     </List>
-  )
+  );
 }
