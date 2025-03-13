@@ -1,7 +1,7 @@
 import { Cache } from '@raycast/api'
 import axios from 'axios'
 import * as cheerio from 'cheerio'
-import { CardSlot, ClassName, Deck, Rarity } from './domain'
+import { CardSlot, ClassName, Deck, Rarity } from '../types/types'
 import { CacheEntry } from './utils'
 
 const CACHE_DURATION_IN_MS = 3600 * 1_000

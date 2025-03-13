@@ -1,10 +1,10 @@
 import { Action, ActionPanel, Grid, Icon, List } from '@raycast/api'
 import { usePromise } from '@raycast/utils'
 import { useEffect, useState } from 'react'
-import { CardDetailView } from './CardDetailView'
-import { CardSlot, ClassName } from './domain'
-import { gethsguruBestDecks, gethsguruBestDecksByClass } from './hsguru'
-import { classIcon, ellipsize, findCard, formatDust, formatWinrate, getAmountEmoji, getLocalCardData, getRarityColor } from './utils'
+import { CardSlot, ClassName } from '../types/types'
+import { gethsguruBestDecks, gethsguruBestDecksByClass } from '../utils/hsguru'
+import { classIcon, ellipsize, findCard, formatDust, formatWinrate, getAmountEmoji, getLocalCardData, getRarityColor } from '../utils/utils'
+import { CardDetailView } from './card-detail-view'
 
 // 定义卡牌数据类型
 interface CardData {

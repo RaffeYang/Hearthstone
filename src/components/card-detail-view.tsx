@@ -1,7 +1,7 @@
 import { Action, ActionPanel, Detail, Icon } from '@raycast/api'
 import { useEffect, useState } from 'react'
-import { Card, CardSlot } from './domain'
-import { CardImageLanguage, getDefaultCardImageLanguage } from './preferences'
+import { CardImageLanguage, getDefaultCardImageLanguage } from '../preferences'
+import { Card, CardSlot } from '../types/types'
 // import { getRarityColor } from './utils'
 
 interface CardDetailViewProps {

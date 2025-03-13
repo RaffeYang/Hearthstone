@@ -1,18 +1,6 @@
 import { Image, LocalStorage } from '@raycast/api'
 import axios from 'axios'
-import { ClassName, Deck } from './domain'
-
-export interface Card {
-  id: string
-  dbfId: number
-  name: string
-  cost: number
-  cardClass?: string
-  rarity?: string
-  type?: string
-  collectible: boolean
-  mana: number // 添加类型注解
-}
+import { Card, ClassName, Deck } from '../types/types'
 
 export const classIcon = (className: ClassName) => {
   // 创建职业名称到图片文件名的映射
@@ -265,12 +253,6 @@ export const getCardsList = async (
     )
   }
 
-  // 按费用搜索
-  // if (searchByCost !== undefined) {
-  //   filteredCards = filteredCards.filter((card: Card) =>  // 添加类型注解
-  //     card.cost === searchByCost
-  //   )
-  // }
   if (searchByCost !== undefined) {
     filteredCards = filteredCards.filter((card: Card) =>
       card.mana === searchByCost // 使用 mana 而不是 cost

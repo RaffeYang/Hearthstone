@@ -1,9 +1,9 @@
 import { Action, ActionPanel, Grid, Icon, List } from '@raycast/api'
 import { usePromise } from '@raycast/utils'
 import { useEffect, useState } from 'react'
-import { CardDetailView } from './CardDetailView'
-import { Card, CardSlot } from './domain'
-import { gethsguruBestDecks } from './hsguru'
+import { CardDetailView } from './components/card-detail-view'
+import { Card, CardSlot } from './types/types'
+import { gethsguruBestDecks } from './utils/hsguru'
 import {
   classIcon,
   ellipsize,
@@ -13,7 +13,7 @@ import {
   getAmountEmoji,
   getLocalCardData,
   getRarityColor
-} from './utils'
+} from './utils/utils'
 
 
 export default function Command() {

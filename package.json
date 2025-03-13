@@ -12,18 +12,18 @@
   "commands": [
     {
       "title": "Best Decks",
-      "name": "search_best_decks",
+      "name": "search-best-decks",
       "description": "Search the best Hearthstone decks",
       "mode": "view"
     },
     {
       "title": "Hero Class",
-      "name": "search_class_decks",
+      "name": "search-class-decks",
       "description": "Search the best Hearthstone decks per class",
       "mode": "view"
     },
     {
-      "name": "card_list",
+      "name": "card-list",
       "title": "Card List",
       "description": "Browse Hearthstone cards",
       "mode": "view"

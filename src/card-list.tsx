@@ -1,8 +1,8 @@
 import { Action, ActionPanel, Grid, Icon } from '@raycast/api'
 import React, { useEffect, useState } from 'react'
-import { CardDetailView } from './CardDetailView'
-import { Card, ClassName } from './domain'
-import { getLocalCardData } from './utils'
+import { CardDetailView } from './components/card-detail-view'
+import { Card, ClassName } from './types/types'
+import { getLocalCardData } from './utils/utils'
 
 export default function CardListCommand() {
   const [cards, setCards] = useState<Card[]>([])
