@@ -53,4 +53,4 @@
 ---
 
 **Disclaimer**: Not affiliated with Blizzard Entertainment. Card data © respective rights holders.  
-**License**: MIT © 2024 Raffe Yang
+**License**: Apache 2 © 2024 Raffe Yang
