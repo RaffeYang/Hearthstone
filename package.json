@@ -65,7 +65,7 @@
     "@types/react": "18.2.27",
     "eslint": "^8.51.0",
     "prettier": "^3.2.5",
-    "typescript": "^5.2.2"
+    "typescript": "^5.8.2"
   },
   "scripts": {
     "fix-lint": "ray lint --fix",
