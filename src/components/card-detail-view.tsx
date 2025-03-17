@@ -1,4 +1,5 @@
 import { Action, ActionPanel, Detail, Icon } from "@raycast/api";
+import { showFailureToast } from "@raycast/utils";
 import { useEffect, useState } from "react";
 import { CardImageLanguage, getDefaultCardImageLanguage } from "../preferences";
 import { Card, CardDetailViewProps, CardSlot } from "../types/types";
@@ -54,29 +55,32 @@ export function CardDetailView({
   // Re-fetch card data when the card language changes
   useEffect(() => {
     const fetchCardData = async () => {
-      if (safeCard.id) {
-        const allCards = await getLocalCardData(
-          cardImageLanguage === CardImageLanguage.ENGLISH ? "enUS" : "zhCN",
-        );
-        const updatedCard = allCards.find(
-          (c: Card) => c.id === safeCard.id || c.dbfId === safeCard.dbfId,
-        );
-        if (updatedCard) {
-          setSafeCard({
-            ...safeCard,
-            name: updatedCard.name || safeCard.name,
-            text: updatedCard.text || safeCard.text,
-            flavor: updatedCard.flavor || safeCard.flavor,
-            type: updatedCard.type || safeCard.type,
-            set: updatedCard.set || safeCard.set,
-            rarity: updatedCard.rarity || safeCard.rarity,
-            faction: updatedCard.faction || safeCard.faction,
-            mechanics: updatedCard.mechanics || safeCard.mechanics,
-          });
+      try {
+        if (safeCard.id) {
+          const allCards = await getLocalCardData(
+            cardImageLanguage === CardImageLanguage.ENGLISH ? "enUS" : "zhCN",
+          );
+          const updatedCard = allCards.find(
+            (c: Card) => c.id === safeCard.id || c.dbfId === safeCard.dbfId,
+          );
+          if (updatedCard) {
+            setSafeCard({
+              ...safeCard,
+              name: updatedCard.name || safeCard.name,
+              text: updatedCard.text || safeCard.text,
+              flavor: updatedCard.flavor || safeCard.flavor,
+              type: updatedCard.type || safeCard.type,
+              set: updatedCard.set || safeCard.set,
+              rarity: updatedCard.rarity || safeCard.rarity,
+              faction: updatedCard.faction || safeCard.faction,
+              mechanics: updatedCard.mechanics || safeCard.mechanics,
+            });
+          }
         }
+      } catch (error) {
+        showFailureToast("Failed to fetch card data");
       }
     };
-
     fetchCardData();
   }, [cardImageLanguage]);
 

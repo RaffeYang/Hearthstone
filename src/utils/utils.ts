@@ -1,4 +1,5 @@
 import { Image, LocalStorage } from "@raycast/api";
+import { showFailureToast } from "@raycast/utils";
 import axios from "axios";
 import { Card, ClassName, Deck, MatchResult } from "../types/types";
 
@@ -174,11 +175,13 @@ export const getLocalCardData = async (language: "enUS" | "zhCN" = "enUS") => {
       console.log("Card data saved to LocalStorage");
       return processedCards;
     } catch (e) {
-      console.error("Failed to save card data to LocalStorage:", e);
+      showFailureToast(e, {
+        title: "Failed to save card data to LocalStorage",
+      });
       return cardData.filter((card: Card) => card.collectible);
     }
   } catch (error) {
-    console.error("Error getting card data:", error);
+    showFailureToast(error, { title: "Error getting card data" });
     return [];
   }
 };
@@ -194,7 +197,7 @@ export const formatTitle = (title: string): string => {
   if (title.length <= 15) {
     return title;
   } else {
-    return title.substring(0, 12) + "...";
+    return title.substring(0, 12) + "…";
   }
 };
 

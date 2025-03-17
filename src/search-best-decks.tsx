@@ -1,5 +1,5 @@
 import { Action, ActionPanel, Grid, Icon, List } from "@raycast/api";
-import { usePromise } from "@raycast/utils";
+import { showFailureToast, usePromise } from "@raycast/utils";
 import { useEffect, useState } from "react";
 import { CardDetailView } from "./components/card-detail-view";
 import { Card, CardSlot } from "./types/types";
@@ -32,7 +32,7 @@ export default function Command() {
         setCardData(data);
         setCardsLoading(false);
       } catch (error) {
-        console.error("Error loading card data:", error);
+        showFailureToast(error, { title: "Error loading card data" });
         setCardsLoading(false);
       }
     };

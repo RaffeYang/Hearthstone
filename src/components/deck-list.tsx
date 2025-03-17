@@ -1,5 +1,5 @@
 import { Action, ActionPanel, Grid, Icon, List } from "@raycast/api";
-import { usePromise } from "@raycast/utils";
+import { showFailureToast, usePromise } from "@raycast/utils";
 import { useEffect, useState } from "react";
 import { Card, DeckDetailsProps, DeckListProps } from "../types/types";
 import { gethsguruBestDecks, gethsguruBestDecksByClass } from "../utils/hsguru";
@@ -35,7 +35,7 @@ export const DeckList: React.FC<DeckListProps> = ({
         const data = await getLocalCardData();
         setCardData(data);
       } catch (error) {
-        console.error("Error loading card data:", error);
+        showFailureToast(error, { title: "Error loading card data" });
       } finally {
         setCardsLoading(false);
       }

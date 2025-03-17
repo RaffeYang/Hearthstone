@@ -88,7 +88,6 @@ export const fetchDecks = async (url: string) => {
   const $ = cheerio.load(response.data);
   const elements = $("div.card");
   const decks: Deck[] = [];
-
   elements.each((_, el) => {
     // Extract deck ID
     const deckId = $(el)

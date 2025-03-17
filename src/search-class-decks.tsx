@@ -33,14 +33,13 @@ export default function Command() {
             <Grid.Dropdown.Item title="Standard" value="2" />
           </Grid.Dropdown.Section>
           <Grid.Dropdown.Section title="Minimum Games">
-            <Grid.Dropdown.Item title="50+" value={`${format}_50`} />
-            <Grid.Dropdown.Item title="100+" value={`${format}_100`} />
-            <Grid.Dropdown.Item title="200+" value={`${format}_200`} />
-            <Grid.Dropdown.Item title="400+" value={`${format}_400`} />
-            <Grid.Dropdown.Item title="800+" value={`${format}_800`} />
-            <Grid.Dropdown.Item title="1600+" value={`${format}_1600`} />
-            <Grid.Dropdown.Item title="3200+" value={`${format}_3200`} />
-            <Grid.Dropdown.Item title="6400+" value={`${format}_6400`} />
+            {[50, 100, 200, 400, 800, 1600, 3200, 6400].map((games) => (
+              <Grid.Dropdown.Item
+                key={games}
+                title={`${games}+`}
+                value={`${format}_${games}`}
+              />
+            ))}
           </Grid.Dropdown.Section>
         </Grid.Dropdown>
       }

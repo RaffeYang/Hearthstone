@@ -1,4 +1,5 @@
-import { Action, ActionPanel, Grid, Icon, showHUD } from "@raycast/api";
+import { Action, ActionPanel, Grid, Icon, showToast } from "@raycast/api";
+import { showFailureToast } from "@raycast/utils";
 import { useEffect, useState } from "react";
 import { CardDetailView } from "./components/card-detail-view";
 import { Card, ClassName } from "./types/types";
@@ -55,7 +56,8 @@ export default function CardListCommand() {
 
         setIsLoading(false);
       } catch (error) {
-        console.error("Error loading card data:", error);
+        showFailureToast(error, { title: "Error loading card data" });
+      } finally {
         setIsLoading(false);
       }
     };
@@ -114,7 +116,7 @@ export default function CardListCommand() {
       setCards(newFilteredCards.slice(0, INITIAL_PAGE_SIZE));
       setHasMoreCards(newFilteredCards.length > INITIAL_PAGE_SIZE);
     } catch (error) {
-      console.error("Error applying filters:", error);
+      showFailureToast(error, { title: "Error applying filters" });
     } finally {
       setIsLoading(false);
     }
@@ -151,11 +153,7 @@ export default function CardListCommand() {
       setVisibleCount(newVisibleCount);
       setCards(filteredCards.slice(0, newVisibleCount));
       setHasMoreCards(filteredCards.length > newVisibleCount);
-      showHUD(
-        `已加载 ${Math.min(newVisibleCount, filteredCards.length)}/${filteredCards.length} 张卡牌`,
-      );
-    } else if (!hasMoreCards) {
-      showHUD("已加载全部卡牌");
+      showToast({ title: "Load More...", message: "More cards loaded" });
     }
   };
 
@@ -216,7 +214,7 @@ export default function CardListCommand() {
             <Action
               title="Load More Cards"
               icon={Icon.Download}
-              shortcut={{ modifiers: ["cmd"], key: "arrowDown" }}
+              shortcut={{ modifiers: ["cmd"], key: "enter" }}
               onAction={() => {
                 loadMoreCards();
                 return { keepWindowOpen: true };
@@ -235,7 +233,7 @@ export default function CardListCommand() {
       ) : (
         cards.map((card) => (
           <Grid.Item
-            key={card.id || card.dbfId || Math.random().toString()}
+            key={card.id || card.dbfId || `card-${card.name}-${card.cost}`}
             title={card.name}
             subtitle={`Cost: ${card.cost}`}
             content={
