@@ -1,17 +1,17 @@
-import { getPreferenceValues } from '@raycast/api'
-import { Preferences } from './types/types'
+import { getPreferenceValues } from "@raycast/api";
+import { Preferences } from "./types/types";
 
 export enum CardImageLanguage {
-  ENGLISH = 'enUS',
-  CHINESE = 'zhCN',
+  ENGLISH = "enUS",
+  CHINESE = "zhCN",
 }
 
 export const getDefaultCardImageLanguage = (): CardImageLanguage => {
-  const preferences = getPreferenceValues<Preferences>()
+  const preferences = getPreferenceValues<Preferences>();
 
-  if (preferences.defaultCardImageLanguage === 'zhCN') {
-    return CardImageLanguage.CHINESE
+  if (preferences.defaultCardImageLanguage === "zhCN") {
+    return CardImageLanguage.CHINESE;
   }
 
-  return CardImageLanguage.ENGLISH
-}
+  return CardImageLanguage.ENGLISH;
+};

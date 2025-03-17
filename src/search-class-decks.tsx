@@ -1,21 +1,21 @@
-import { Action, ActionPanel, Grid, useNavigation } from '@raycast/api'
-import { useState } from 'react'
-import { DeckList } from './components/deck-list'
-import { ClassName } from './types/types'
-import { classIcon, getGameModeName } from './utils/utils'
+import { Action, ActionPanel, Grid, useNavigation } from "@raycast/api";
+import { useState } from "react";
+import { DeckList } from "./components/deck-list";
+import { ClassName } from "./types/types";
+import { classIcon, getGameModeName } from "./utils/utils";
 
 export default function Command() {
-  const [format, setFormat] = useState(1)
-  const [minGames, setMinGames] = useState<number>()
-  const { push } = useNavigation()
+  const [format, setFormat] = useState(1);
+  const [minGames, setMinGames] = useState<number>();
+  const { push } = useNavigation();
 
-  const classes = Object.values(ClassName)
+  const classes = Object.values(ClassName);
 
   const handleFormatChange = (newValue: string) => {
-    const [newFormat, newMinGames] = newValue.split('_')
-    setFormat(Number(newFormat))
-    setMinGames(newMinGames ? Number(newMinGames) : undefined)
-  }
+    const [newFormat, newMinGames] = newValue.split("_");
+    setFormat(Number(newFormat));
+    setMinGames(newMinGames ? Number(newMinGames) : undefined);
+  };
 
   return (
     <Grid
@@ -24,7 +24,10 @@ export default function Command() {
       aspectRatio="1" // Make sure each element is a square
       fit={Grid.Fit.Fill} // Fill available space
       searchBarAccessory={
-        <Grid.Dropdown tooltip="Select Format and Filters" onChange={handleFormatChange}>
+        <Grid.Dropdown
+          tooltip="Select Format and Filters"
+          onChange={handleFormatChange}
+        >
           <Grid.Dropdown.Section title="Game Mode">
             <Grid.Dropdown.Item title="Wild" value="1" />
             <Grid.Dropdown.Item title="Standard" value="2" />
@@ -52,7 +55,15 @@ export default function Command() {
               <ActionPanel.Section>
                 <Action
                   title={`View ${getGameModeName(format)} Decks`}
-                  onAction={() => push(<DeckList className={className} format={format} minGames={minGames} />)}
+                  onAction={() =>
+                    push(
+                      <DeckList
+                        className={className}
+                        format={format}
+                        minGames={minGames}
+                      />,
+                    )
+                  }
                 />
               </ActionPanel.Section>
             </ActionPanel>
@@ -60,5 +71,5 @@ export default function Command() {
         />
       ))}
     </Grid>
-  )
+  );
 }
