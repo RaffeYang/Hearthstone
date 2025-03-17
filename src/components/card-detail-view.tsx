@@ -5,11 +5,7 @@ import { CardImageLanguage, getDefaultCardImageLanguage } from "../preferences";
 import { Card, CardDetailViewProps, CardSlot } from "../types/types";
 import { getLocalCardData } from "../utils/utils";
 
-export function CardDetailView({
-  slot = {},
-  card = null,
-  language = "enUS",
-}: CardDetailViewProps) {
+export function CardDetailView({ slot = {}, card = null, language = "enUS" }: CardDetailViewProps) {
   const safeSlot: CardSlot = {
     card: {
       name: slot?.card?.name || "Unknown",
@@ -48,21 +44,15 @@ export function CardDetailView({
   );
 
   // Adding independent state for UI language
-  const [uiLanguage, setUiLanguage] = useState<"enUS" | "zhCN">(
-    language === "enUS" ? "enUS" : "zhCN",
-  );
+  const [uiLanguage, setUiLanguage] = useState<"enUS" | "zhCN">(language === "enUS" ? "enUS" : "zhCN");
 
   // Re-fetch card data when the card language changes
   useEffect(() => {
     const fetchCardData = async () => {
       try {
         if (safeCard.id) {
-          const allCards = await getLocalCardData(
-            cardImageLanguage === CardImageLanguage.ENGLISH ? "enUS" : "zhCN",
-          );
-          const updatedCard = allCards.find(
-            (c: Card) => c.id === safeCard.id || c.dbfId === safeCard.dbfId,
-          );
+          const allCards = await getLocalCardData(cardImageLanguage === CardImageLanguage.ENGLISH ? "enUS" : "zhCN");
+          const updatedCard = allCards.find((c: Card) => c.id === safeCard.id || c.dbfId === safeCard.dbfId);
           if (updatedCard) {
             setSafeCard({
               ...safeCard,
@@ -214,13 +204,9 @@ export function CardDetailView({
 
   const toggleCardImageLanguage = () => {
     setCardImageLanguage(
-      cardImageLanguage === CardImageLanguage.ENGLISH
-        ? CardImageLanguage.CHINESE
-        : CardImageLanguage.ENGLISH,
+      cardImageLanguage === CardImageLanguage.ENGLISH ? CardImageLanguage.CHINESE : CardImageLanguage.ENGLISH,
     );
-    setUiLanguage(
-      cardImageLanguage === CardImageLanguage.ENGLISH ? "zhCN" : "enUS",
-    );
+    setUiLanguage(cardImageLanguage === CardImageLanguage.ENGLISH ? "zhCN" : "enUS");
   };
 
   // const toggleUILanguage = () => {
@@ -252,23 +238,14 @@ ${safeCard.flavor ? `> ${safeCard.flavor}` : ""}
           <Detail.Metadata.Label
             title={t("Class")}
             text={`${classSymbolMap[cardClass] || "⚬"}  ${
-              uiLanguage === "enUS"
-                ? classNameMap[cardClass] || cardClass
-                : classNameMapCN[cardClass] || cardClass
+              uiLanguage === "enUS" ? classNameMap[cardClass] || cardClass : classNameMapCN[cardClass] || cardClass
             }`}
           />
           <Detail.Metadata.Label title={t("Mana Cost")} text={`♦  ${cost}`} />
-          <Detail.Metadata.Label
-            title={t("Collectible")}
-            text={safeCard.collectible ? t("Yes") : t("No")}
-          />
+          <Detail.Metadata.Label title={t("Collectible")} text={safeCard.collectible ? t("Yes") : t("No")} />
           <Detail.Metadata.Label
             title={t("Card Language")}
-            text={
-              cardImageLanguage === CardImageLanguage.ENGLISH
-                ? t("English")
-                : t("Chinese")
-            }
+            text={cardImageLanguage === CardImageLanguage.ENGLISH ? t("English") : t("Chinese")}
             icon={{ source: Icon.Globe }}
           />
         </Detail.Metadata>
@@ -278,9 +255,7 @@ ${safeCard.flavor ? `> ${safeCard.flavor}` : ""}
           <Action
             // The button text is fixed in English and does not change with the language
             title={
-              cardImageLanguage === CardImageLanguage.ENGLISH
-                ? "Switch to Chinese Card"
-                : "Switch to English Card"
+              cardImageLanguage === CardImageLanguage.ENGLISH ? "Switch to Chinese Card" : "Switch to English Card"
             }
             icon={Icon.Globe}
             onAction={toggleCardImageLanguage}

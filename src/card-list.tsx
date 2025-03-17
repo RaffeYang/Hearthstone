@@ -37,15 +37,9 @@ export default function CardListCommand() {
         // Extract unique card set
         const cardSets = data
           .map((card: Card) => card.set)
-          .filter(
-            (set: string | undefined): set is string =>
-              typeof set === "string" && set.length > 0,
-          );
+          .filter((set: string | undefined): set is string => typeof set === "string" && set.length > 0);
 
-        const uniqueSetValues = [
-          "all",
-          ...Array.from(new Set<string>(cardSets)),
-        ];
+        const uniqueSetValues = ["all", ...Array.from(new Set<string>(cardSets))];
         setUniqueSets(uniqueSetValues);
 
         // Load only collectible cards
@@ -72,9 +66,7 @@ export default function CardListCommand() {
     setIsLoading(true);
 
     try {
-      let newFilteredCards = allCardData.filter(
-        (card: Card) => card.collectible,
-      );
+      let newFilteredCards = allCardData.filter((card: Card) => card.collectible);
 
       if (searchTerm) {
         newFilteredCards = newFilteredCards.filter((card) =>
@@ -104,9 +96,7 @@ export default function CardListCommand() {
       }
 
       if (searchBySet !== "all") {
-        newFilteredCards = newFilteredCards.filter(
-          (card) => card.set === searchBySet,
-        );
+        newFilteredCards = newFilteredCards.filter((card) => card.set === searchBySet);
       }
 
       setFilteredCards(newFilteredCards);
@@ -175,13 +165,7 @@ export default function CardListCommand() {
             {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, ">10", "all"].map((cost) => (
               <Grid.Dropdown.Item
                 key={`cost_${cost}`}
-                title={
-                  cost === "all"
-                    ? "All Costs"
-                    : cost === ">10"
-                      ? "Cost > 10"
-                      : `Cost ${cost}`
-                }
+                title={cost === "all" ? "All Costs" : cost === ">10" ? "Cost > 10" : `Cost ${cost}`}
                 value={`${language}_cost_${cost}`}
               />
             ))}

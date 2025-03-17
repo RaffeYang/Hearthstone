@@ -5,21 +5,13 @@ import { CardSlot, ClassName, Deck, Rarity } from "../types/types";
 import { CacheEntry } from "./utils";
 
 const CACHE_DURATION_IN_MS = 3600 * 1_000;
-export const hsguru_BEST_DECKS_URL = (format: number) =>
-  `https://www.hsguru.com/decks/?format=${format}`;
+export const hsguru_BEST_DECKS_URL = (format: number) => `https://www.hsguru.com/decks/?format=${format}`;
 
 const cache = new Cache();
 
-export const hsguruBestDecksWithFiltersUrl = (
-  className: ClassName,
-  format: number,
-  minGames?: number,
-) => {
+export const hsguruBestDecksWithFiltersUrl = (className: ClassName, format: number, minGames?: number) => {
   // Convert class names to the uppercase format required by the API
-  const classNameForApi = className
-    .toString()
-    .replace(/\s+/g, "")
-    .toUpperCase();
+  const classNameForApi = className.toString().replace(/\s+/g, "").toUpperCase();
 
   let url = `https://www.hsguru.com/decks/?format=${format}&player_class=${classNameForApi}`;
   if (minGames) {
@@ -43,11 +35,7 @@ export const gethsguruBestDecks = async (format: number = 1) => {
   return decks;
 };
 
-export const gethsguruBestDecksByClass = async (
-  className: ClassName,
-  format: number = 1,
-  minGames?: number,
-) => {
+export const gethsguruBestDecksByClass = async (className: ClassName, format: number = 1, minGames?: number) => {
   const cacheKey = `${className.toString()}_${format}_${minGames || ""}`;
 
   const cachedDecks = getFromCache(cacheKey);
@@ -56,9 +44,7 @@ export const gethsguruBestDecksByClass = async (
     return Promise.resolve(cachedDecks);
   }
 
-  const decks = await fetchDecks(
-    hsguruBestDecksWithFiltersUrl(className, format, minGames),
-  );
+  const decks = await fetchDecks(hsguruBestDecksWithFiltersUrl(className, format, minGames));
   saveToCache(cacheKey, decks);
 
   return decks;
@@ -90,10 +76,7 @@ export const fetchDecks = async (url: string) => {
   const decks: Deck[] = [];
   elements.each((_, el) => {
     // Extract deck ID
-    const deckId = $(el)
-      .find('div[id^="deck_stats-"]')
-      .attr("id")
-      ?.replace("deck_stats-", "");
+    const deckId = $(el).find('div[id^="deck_stats-"]').attr("id")?.replace("deck_stats-", "");
 
     const fullText = $(el).find("h2.deck-title").text().trim();
     const className = $(el)
@@ -103,14 +86,8 @@ export const fetchDecks = async (url: string) => {
       .filter((cl) => cl !== "decklist-info")
       .join(" ") as ClassName;
 
-    const title = fullText
-      .split("\n")[0]
-      .replace("### ", "")
-      .replace(new RegExp(className, "i"), "")
-      .trim();
-    const code = $(el)
-      .find("button[data-clipboard-text]")
-      .attr("data-clipboard-text");
+    const title = fullText.split("\n")[0].replace("### ", "").replace(new RegExp(className, "i"), "").trim();
+    const code = $(el).find("button[data-clipboard-text]").attr("data-clipboard-text");
     const winrateText = $(el).find("span.basic-black-text").text();
     const dust = parseInt($(el).find("div.dust-bar-inner").text().trim());
     const winrate = winrateText ? parseFloat(winrateText) : null;
@@ -122,9 +99,7 @@ export const fetchDecks = async (url: string) => {
     const slots: CardSlot[] = cardContainers
       .get()
       .map((cardContainer: cheerio.Element) => {
-        const hsguruId = $(cardContainer)
-          .find("div[phx-value-card_id]")
-          .attr("phx-value-card_id");
+        const hsguruId = $(cardContainer).find("div[phx-value-card_id]").attr("phx-value-card_id");
         const numericHsguruId = hsguruId ? parseInt(hsguruId, 10) : 0;
 
         const cardName = $(cardContainer).find("div.card-name").text().trim();
@@ -133,9 +108,7 @@ export const fetchDecks = async (url: string) => {
         const mana = manaMatch ? parseInt(manaMatch[1], 10) : 0;
 
         const amountMatch = cardName.match(/# (\d+)x/);
-        const amount = amountMatch
-          ? (parseInt(amountMatch[1], 10) as 1 | 2)
-          : 1;
+        const amount = amountMatch ? (parseInt(amountMatch[1], 10) as 1 | 2) : 1;
 
         const cleanName = cardName.replace(/# \d+x \(\d+\)\s*/, "").trim();
 

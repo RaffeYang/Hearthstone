@@ -17,10 +17,7 @@ import {
 
 export default function Command() {
   const [format, setFormat] = useState(1);
-  const { data: decks, isLoading: decksLoading } = usePromise(
-    gethsguruBestDecks,
-    [format],
-  );
+  const { data: decks, isLoading: decksLoading } = usePromise(gethsguruBestDecks, [format]);
 
   const [cardData, setCardData] = useState<Card[]>([]);
   const [cardsLoading, setCardsLoading] = useState(true);
@@ -50,10 +47,7 @@ export default function Command() {
       aspectRatio="1"
       fit={Grid.Fit.Fill}
       searchBarAccessory={
-        <Grid.Dropdown
-          tooltip="Select Format"
-          onChange={(value) => setFormat(Number(value))}
-        >
+        <Grid.Dropdown tooltip="Select Format" onChange={(value) => setFormat(Number(value))}>
           <Grid.Dropdown.Section title="Game Mode">
             <Grid.Dropdown.Item title="Wild" value="1" />
             <Grid.Dropdown.Item title="Standard" value="2" />
@@ -86,13 +80,8 @@ export default function Command() {
                     />
                   }
                 />
-                <Action.CopyToClipboard
-                  content={deck.code}
-                  title="Copy Deck Code"
-                />
-                <Action.OpenInBrowser
-                  url={`https://www.hsguru.com/decks?format=${format}`}
-                />
+                <Action.CopyToClipboard content={deck.code} title="Copy Deck Code" />
+                <Action.OpenInBrowser url={`https://www.hsguru.com/decks?format=${format}`} />
               </ActionPanel.Section>
             </ActionPanel>
           }
@@ -149,19 +138,10 @@ function DeckDetails({
                 <ActionPanel>
                   <Action.Push
                     title="View Card Details"
-                    target={
-                      <CardDetailView
-                        slot={slot}
-                        card={card || null}
-                        deckCode={deckCode}
-                      />
-                    }
+                    target={<CardDetailView slot={slot} card={card || null} deckCode={deckCode} />}
                     icon={Icon.Eye}
                   />
-                  <Action.CopyToClipboard
-                    content={deckCode}
-                    title="Copy Deck Code"
-                  />
+                  <Action.CopyToClipboard content={deckCode} title="Copy Deck Code" />
                 </ActionPanel>
               }
             />

@@ -24,21 +24,14 @@ export default function Command() {
       aspectRatio="1" // Make sure each element is a square
       fit={Grid.Fit.Fill} // Fill available space
       searchBarAccessory={
-        <Grid.Dropdown
-          tooltip="Select Format and Filters"
-          onChange={handleFormatChange}
-        >
+        <Grid.Dropdown tooltip="Select Format and Filters" onChange={handleFormatChange}>
           <Grid.Dropdown.Section title="Game Mode">
             <Grid.Dropdown.Item title="Wild" value="1" />
             <Grid.Dropdown.Item title="Standard" value="2" />
           </Grid.Dropdown.Section>
           <Grid.Dropdown.Section title="Minimum Games">
             {[50, 100, 200, 400, 800, 1600, 3200, 6400].map((games) => (
-              <Grid.Dropdown.Item
-                key={games}
-                title={`${games}+`}
-                value={`${format}_${games}`}
-              />
+              <Grid.Dropdown.Item key={games} title={`${games}+`} value={`${format}_${games}`} />
             ))}
           </Grid.Dropdown.Section>
         </Grid.Dropdown>
@@ -54,15 +47,7 @@ export default function Command() {
               <ActionPanel.Section>
                 <Action
                   title={`View ${getGameModeName(format)} Decks`}
-                  onAction={() =>
-                    push(
-                      <DeckList
-                        className={className}
-                        format={format}
-                        minGames={minGames}
-                      />,
-                    )
-                  }
+                  onAction={() => push(<DeckList className={className} format={format} minGames={minGames} />)}
                 />
               </ActionPanel.Section>
             </ActionPanel>

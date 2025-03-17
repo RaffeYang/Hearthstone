@@ -58,13 +58,10 @@ export const findCard = (
 ) => {
   // If there is a hsguruId, use it first to match the dbfId in cards.json
   if (hsguruId) {
-    const numericHsguruId =
-      typeof hsguruId === "string" ? parseInt(hsguruId, 10) : hsguruId;
+    const numericHsguruId = typeof hsguruId === "string" ? parseInt(hsguruId, 10) : hsguruId;
     console.log(`Looking for card with dbfId: ${numericHsguruId}`);
 
-    const idMatchedCard = cardDataArray.find(
-      (card) => card.dbfId === numericHsguruId,
-    );
+    const idMatchedCard = cardDataArray.find((card) => card.dbfId === numericHsguruId);
     if (idMatchedCard) {
       console.log(`Found card by dbfId ${numericHsguruId}:`, {
         name: idMatchedCard.name,
@@ -100,10 +97,7 @@ export const findCard = (
       }
 
       // Exactly contains match
-      if (
-        normalizedCardName.includes(normalizedTitle) ||
-        normalizedTitle.includes(normalizedCardName)
-      ) {
+      if (normalizedCardName.includes(normalizedTitle) || normalizedTitle.includes(normalizedCardName)) {
         return { card, matchScore: 2 }; // Medium score
       }
 
@@ -118,8 +112,7 @@ export const findCard = (
       if (wordMatchCount > 0) {
         return {
           card,
-          matchScore:
-            1 + wordMatchCount / Math.max(cardWords.length, titleWords.length),
+          matchScore: 1 + wordMatchCount / Math.max(cardWords.length, titleWords.length),
         };
       }
 
@@ -145,21 +138,15 @@ export const getLocalCardData = async (language: "enUS" | "zhCN" = "enUS") => {
     }
 
     // If there is no data in LocalStorage, try to get it from the API
-    console.log(
-      `No card data found in LocalStorage for ${language}, fetching from API...`,
-    );
-    const response = await axios.get(
-      `https://api.hearthstonejson.com/v1/latest/${language}/cards.json`,
-    );
+    console.log(`No card data found in LocalStorage for ${language}, fetching from API...`);
+    const response = await axios.get(`https://api.hearthstonejson.com/v1/latest/${language}/cards.json`);
 
     const cardData = response.data;
 
     // Store the acquired data in LocalStorage for next use
     try {
       // Only save collectible cards, and make sure to include the ID field correctly
-      const collectibleCards = cardData.filter(
-        (card: Card) => card.collectible,
-      );
+      const collectibleCards = cardData.filter((card: Card) => card.collectible);
 
       // Process each card, ensuring the cost and ID information are correct
       const processedCards = collectibleCards.map((card: Card) => ({
@@ -238,21 +225,14 @@ export const getAmountEmoji = (amount: 1 | 2): string => {
 };
 
 //Cards Search Pagination
-export const getCardsList = async (
-  page = 1,
-  pageSize = 10,
-  searchTerm = "",
-  searchByCost?: number,
-) => {
+export const getCardsList = async (page = 1, pageSize = 10, searchTerm = "", searchByCost?: number) => {
   const allCards = await getLocalCardData();
 
   let filteredCards = allCards.filter((card: Card) => card.collectible);
 
   // Search by Name
   if (searchTerm) {
-    filteredCards = filteredCards.filter((card: Card) =>
-      card.name.toLowerCase().includes(searchTerm.toLowerCase()),
-    );
+    filteredCards = filteredCards.filter((card: Card) => card.name.toLowerCase().includes(searchTerm.toLowerCase()));
   }
 
   if (searchByCost !== undefined) {
