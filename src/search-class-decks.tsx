@@ -1,28 +1,28 @@
-import { Action, ActionPanel, Grid, useNavigation } from '@raycast/api';
-import { useState } from 'react';
-import { DeckList } from './components/deck-list';
-import { ClassName } from './types/types';
-import { classIcon, getGameModeName } from './utils/utils';
+import { Action, ActionPanel, Grid, useNavigation } from '@raycast/api'
+import { useState } from 'react'
+import { DeckList } from './components/deck-list'
+import { ClassName } from './types/types'
+import { classIcon, getGameModeName } from './utils/utils'
 
 export default function Command() {
-  const [format, setFormat] = useState(1);
-  const [minGames, setMinGames] = useState<number>();
-  const { push } = useNavigation();
+  const [format, setFormat] = useState(1)
+  const [minGames, setMinGames] = useState<number>()
+  const { push } = useNavigation()
 
-  const classes = Object.values(ClassName);
+  const classes = Object.values(ClassName)
 
   const handleFormatChange = (newValue: string) => {
-    const [newFormat, newMinGames] = newValue.split('_');
-    setFormat(Number(newFormat));
-    setMinGames(newMinGames ? Number(newMinGames) : undefined);
-  };
+    const [newFormat, newMinGames] = newValue.split('_')
+    setFormat(Number(newFormat))
+    setMinGames(newMinGames ? Number(newMinGames) : undefined)
+  }
 
   return (
     <Grid
-      columns={5} // 设置列数
-      inset={Grid.Inset.Medium} // 使用中等内边距
-      aspectRatio="1" // 确保每个元素是正方形
-      fit={Grid.Fit.Fill} // 填充可用空间
+      columns={5} // Set the number of columns
+      inset={Grid.Inset.Medium} // Use medium padding
+      aspectRatio="1" // Make sure each element is a square
+      fit={Grid.Fit.Fill} // Fill available space
       searchBarAccessory={
         <Grid.Dropdown tooltip="Select Format and Filters" onChange={handleFormatChange}>
           <Grid.Dropdown.Section title="Game Mode">
@@ -60,5 +60,5 @@ export default function Command() {
         />
       ))}
     </Grid>
-  );
+  )
 }

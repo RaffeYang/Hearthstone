@@ -1,8 +1,8 @@
-import { Action, ActionPanel, Grid, Icon, List } from '@raycast/api';
-import { usePromise } from '@raycast/utils';
-import { useEffect, useState } from 'react';
-import { Card, DeckDetailsProps, DeckListProps } from '../types/types';
-import { gethsguruBestDecks, gethsguruBestDecksByClass } from '../utils/hsguru';
+import { Action, ActionPanel, Grid, Icon, List } from '@raycast/api'
+import { usePromise } from '@raycast/utils'
+import { useEffect, useState } from 'react'
+import { Card, DeckDetailsProps, DeckListProps } from '../types/types'
+import { gethsguruBestDecks, gethsguruBestDecksByClass } from '../utils/hsguru'
 import {
   classIcon,
   ellipsize,
@@ -12,35 +12,35 @@ import {
   getAmountEmoji,
   getLocalCardData,
   getRarityColor,
-} from '../utils/utils';
-import { CardDetailView } from './card-detail-view';
+} from '../utils/utils'
+import { CardDetailView } from './card-detail-view'
 
 export const DeckList: React.FC<DeckListProps> = ({ className, format = 1, minGames }) => {
   const { data: decks, isLoading: decksLoading } = className
     ? usePromise(gethsguruBestDecksByClass, [className, format, minGames], {})
-    : usePromise(gethsguruBestDecks, [format], {});
+    : usePromise(gethsguruBestDecks, [format], {})
 
-  // 使用本地卡牌数据
-  const [cardData, setCardData] = useState<Card[]>([]);
+  // Using local card data
+  const [cardData, setCardData] = useState<Card[]>([])
 
-  const [cardsLoading, setCardsLoading] = useState(true);
+  const [cardsLoading, setCardsLoading] = useState(true)
 
   useEffect(() => {
     const loadCardData = async () => {
       try {
-        const data = await getLocalCardData();
-        setCardData(data);
+        const data = await getLocalCardData()
+        setCardData(data)
       } catch (error) {
-        console.error('Error loading card data:', error);
+        console.error('Error loading card data:', error)
       } finally {
-        setCardsLoading(false);
+        setCardsLoading(false)
       }
-    };
+    }
 
-    loadCardData();
-  }, []);
+    loadCardData()
+  }, [])
 
-  const isLoading = decksLoading || cardsLoading;
+  const isLoading = decksLoading || cardsLoading
 
   return (
     <Grid isLoading={isLoading} columns={5} inset={Grid.Inset.Medium} aspectRatio="1" fit={Grid.Fit.Fill}>
@@ -81,23 +81,23 @@ export const DeckList: React.FC<DeckListProps> = ({ className, format = 1, minGa
         />
       ))}
     </Grid>
-  );
-};
+  )
+}
 
 function DeckDetails({ title, slots, cardData, deckCode, className }: DeckDetailsProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchByCost, setSearchByCost] = useState<number | undefined>(undefined);
+  const [searchTerm, setSearchTerm] = useState('')
+  const [searchByCost, setSearchByCost] = useState<number | undefined>(undefined)
 
-  // 过滤卡牌的逻辑
+  // Logic for filtering cards
   const filteredSlots = slots.filter((slot) => {
-    // 名称搜索
-    const matchesName = !searchTerm || slot.card.name.toLowerCase().includes(searchTerm.toLowerCase());
+    // Name Search
+    const matchesName = !searchTerm || slot.card.name.toLowerCase().includes(searchTerm.toLowerCase())
 
-    // 费用搜索
-    const matchesCost = searchByCost === undefined || slot.card.cost === searchByCost;
+    // Cost Search
+    const matchesCost = searchByCost === undefined || slot.card.cost === searchByCost
 
-    return matchesName && matchesCost;
-  });
+    return matchesName && matchesCost
+  })
 
   return (
     <List
@@ -118,7 +118,7 @@ function DeckDetails({ title, slots, cardData, deckCode, className }: DeckDetail
     >
       <List.Section title={title} subtitle={`Class: ${className}`}>
         {filteredSlots.map((slot, index) => {
-          const rarityText = slot.card.rarity || 'Unknown';
+          const rarityText = slot.card.rarity || 'Unknown'
 
           return (
             <List.Item
@@ -150,9 +150,9 @@ function DeckDetails({ title, slots, cardData, deckCode, className }: DeckDetail
                 </ActionPanel>
               }
             />
-          );
+          )
         })}
       </List.Section>
     </List>
-  );
+  )
 }

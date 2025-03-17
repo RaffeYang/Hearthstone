@@ -1,8 +1,8 @@
-import { Action, ActionPanel, Detail, Icon } from '@raycast/api';
-import { useEffect, useState } from 'react';
-import { CardImageLanguage, getDefaultCardImageLanguage } from '../preferences';
-import { Card, CardDetailViewProps, CardSlot } from '../types/types';
-import { getLocalCardData } from '../utils/utils';
+import { Action, ActionPanel, Detail, Icon } from '@raycast/api'
+import { useEffect, useState } from 'react'
+import { CardImageLanguage, getDefaultCardImageLanguage } from '../preferences'
+import { Card, CardDetailViewProps, CardSlot } from '../types/types'
+import { getLocalCardData } from '../utils/utils'
 
 export function CardDetailView({ slot = {}, card = null, language = 'enUS' }: CardDetailViewProps) {
   const safeSlot: CardSlot = {
@@ -16,7 +16,7 @@ export function CardDetailView({ slot = {}, card = null, language = 'enUS' }: Ca
       mana: slot?.card?.mana ?? 0,
     },
     amount: slot?.amount ?? 1,
-  };
+  }
 
   const [safeCard, setSafeCard] = useState<Card>({
     name: card?.name || safeSlot.card.name,
@@ -36,21 +36,21 @@ export function CardDetailView({ slot = {}, card = null, language = 'enUS' }: Ca
     set: card?.set || '',
     elite: card?.elite || false,
     faction: card?.faction || '',
-  });
+  })
 
   const [cardImageLanguage, setCardImageLanguage] = useState<CardImageLanguage>(
     language === 'enUS' ? CardImageLanguage.ENGLISH : CardImageLanguage.CHINESE,
-  );
+  )
 
-  // 为UI语言添加独立状态
-  const [uiLanguage, setUiLanguage] = useState<'enUS' | 'zhCN'>(language === 'enUS' ? 'enUS' : 'zhCN');
+  // Adding independent state for UI language
+  const [uiLanguage, setUiLanguage] = useState<'enUS' | 'zhCN'>(language === 'enUS' ? 'enUS' : 'zhCN')
 
-  // 当卡牌语言改变时重新获取卡牌数据
+  // Re-fetch card data when the card language changes
   useEffect(() => {
     const fetchCardData = async () => {
       if (safeCard.id) {
-        const allCards = await getLocalCardData(cardImageLanguage === CardImageLanguage.ENGLISH ? 'enUS' : 'zhCN');
-        const updatedCard = allCards.find((c: Card) => c.id === safeCard.id || c.dbfId === safeCard.dbfId);
+        const allCards = await getLocalCardData(cardImageLanguage === CardImageLanguage.ENGLISH ? 'enUS' : 'zhCN')
+        const updatedCard = allCards.find((c: Card) => c.id === safeCard.id || c.dbfId === safeCard.dbfId)
         if (updatedCard) {
           setSafeCard({
             ...safeCard,
@@ -62,24 +62,28 @@ export function CardDetailView({ slot = {}, card = null, language = 'enUS' }: Ca
             rarity: updatedCard.rarity || safeCard.rarity,
             faction: updatedCard.faction || safeCard.faction,
             mechanics: updatedCard.mechanics || safeCard.mechanics,
-          });
+          })
         }
       }
-    };
+    }
 
-    fetchCardData();
-  }, [cardImageLanguage]);
+    fetchCardData()
+  }, [cardImageLanguage])
+
+  // useEffect(() => {
+  //   const defaultLanguage = getDefaultCardImageLanguage();
+  //   setCardImageLanguage(defaultLanguage);
+  //   setUiLanguage(defaultLanguage === CardImageLanguage.ENGLISH ? 'enUS' : 'zhCN');
+  // }, []);
 
   useEffect(() => {
-    const defaultLanguage = getDefaultCardImageLanguage();
-    setCardImageLanguage(defaultLanguage);
-    setUiLanguage(defaultLanguage === CardImageLanguage.ENGLISH ? 'enUS' : 'zhCN');
-  }, []);
-
+    const defaultLanguage = getDefaultCardImageLanguage()
+    setCardImageLanguage(defaultLanguage)
+  }, [])
   // const cardId = safeCard.id
   // const dbfId = safeCard.dbfId.toString()
-  const cardName = safeCard.name;
-  const cost = safeCard.cost;
+  const cardName = safeCard.name
+  const cost = safeCard.cost
   // const flavor = safeCard.flavor
   // const set = safeCard.set
   // const type = safeCard.type
@@ -90,9 +94,8 @@ export function CardDetailView({ slot = {}, card = null, language = 'enUS' }: Ca
   // const mechanics = safeCard.mechanics?.length > 0 ? safeCard.mechanics.join(', ') : 'None'
   // const rarity = safeCard.rarity
 
-  const cardClass = safeCard.cardClass?.toUpperCase() || 'NEUTRAL';
+  const cardClass = safeCard.cardClass?.toUpperCase() || 'NEUTRAL'
 
-  // 英文职业名称映射
   const classNameMap: Record<string, string> = {
     DEATHKNIGHT: 'Death Knight',
     DEMONHUNTER: 'Demon Hunter',
@@ -106,9 +109,8 @@ export function CardDetailView({ slot = {}, card = null, language = 'enUS' }: Ca
     SHAMAN: 'Shaman',
     WARLOCK: 'Warlock',
     WARRIOR: 'Warrior',
-  };
+  }
 
-  // 中文职业名称映射
   const classNameMapCN: Record<string, string> = {
     DEATHKNIGHT: '死亡骑士',
     DEMONHUNTER: '恶魔猎手',
@@ -122,9 +124,8 @@ export function CardDetailView({ slot = {}, card = null, language = 'enUS' }: Ca
     SHAMAN: '萨满祭司',
     WARLOCK: '术士',
     WARRIOR: '战士',
-  };
+  }
 
-  // 界面文本翻译字典
   const uiTranslations: Record<string, Record<string, string>> = {
     enUS: {
       'Card Name': 'Card Name',
@@ -170,12 +171,11 @@ export function CardDetailView({ slot = {}, card = null, language = 'enUS' }: Ca
       'Card Text': '卡牌文本',
       'Flavor Text': '风味文本',
     },
-  };
+  }
 
-  // 翻译函数
   const t = (key: string): string => {
-    return uiTranslations[uiLanguage][key] || key;
-  };
+    return uiTranslations[uiLanguage][key] || key
+  }
 
   const classSymbolMap: Record<string, string> = {
     DEATHKNIGHT: '✠',
@@ -190,21 +190,19 @@ export function CardDetailView({ slot = {}, card = null, language = 'enUS' }: Ca
     SHAMAN: '☸︎',
     WARLOCK: '⏣',
     WARRIOR: '⊗',
-  };
+  }
 
   const imageUrl = safeCard.id
-    ? `https://art.hearthstonejson.com/v1/render/latest/${
-        cardImageLanguage === CardImageLanguage.ENGLISH ? 'enUS' : 'zhCN'
-      }/256x/${safeCard.id.replace(/^CORE_/, '')}.png`
-    : null;
+    ? `https://art.hearthstonejson.com/v1/render/latest/${cardImageLanguage === CardImageLanguage.ENGLISH ? 'enUS' : 'zhCN'
+    }/256x/${safeCard.id.replace(/^CORE_/, '')}.png`
+    : null
 
   const toggleCardImageLanguage = () => {
     setCardImageLanguage(
       cardImageLanguage === CardImageLanguage.ENGLISH ? CardImageLanguage.CHINESE : CardImageLanguage.ENGLISH,
-    );
-    // 同步切换UI语言
-    setUiLanguage(cardImageLanguage === CardImageLanguage.ENGLISH ? 'zhCN' : 'enUS');
-  };
+    )
+    setUiLanguage(cardImageLanguage === CardImageLanguage.ENGLISH ? 'zhCN' : 'enUS')
+  }
 
   // const toggleUILanguage = () => {
   //   setUiLanguage(uiLanguage === 'enUS' ? 'zhCN' : 'enUS')
@@ -213,14 +211,13 @@ export function CardDetailView({ slot = {}, card = null, language = 'enUS' }: Ca
 ${imageUrl ? `![${cardName}](${imageUrl})` : '*Card image not found*'}
 
 ${safeCard.flavor ? `> ${safeCard.flavor}` : ''}
-  `;
+  `
   // 在 card-detail-view.tsx 文件中
 
-  // 将标题栏部分的文本固定为英文
   return (
     <Detail
       markdown={markdown}
-      // 注意：这里保持英文，不使用翻译函数t()
+      // Note: Keep it in English here and do not use the translation function t()
       navigationTitle={`Card Details`}
       metadata={
         <Detail.Metadata>
@@ -235,9 +232,8 @@ ${safeCard.flavor ? `> ${safeCard.flavor}` : ''}
           <Detail.Metadata.Label title={t('Mechanics')} text={mechanics} />*/}
           <Detail.Metadata.Label
             title={t('Class')}
-            text={`${classSymbolMap[cardClass] || '⚬'}  ${
-              uiLanguage === 'enUS' ? classNameMap[cardClass] || cardClass : classNameMapCN[cardClass] || cardClass
-            }`}
+            text={`${classSymbolMap[cardClass] || '⚬'}  ${uiLanguage === 'enUS' ? classNameMap[cardClass] || cardClass : classNameMapCN[cardClass] || cardClass
+              }`}
           />
           <Detail.Metadata.Label title={t('Mana Cost')} text={`♦  ${cost}`} />
           <Detail.Metadata.Label title={t('Collectible')} text={safeCard.collectible ? t('Yes') : t('No')} />
@@ -251,7 +247,7 @@ ${safeCard.flavor ? `> ${safeCard.flavor}` : ''}
       actions={
         <ActionPanel>
           <Action
-            // 按钮文本固定为英文，不随语言切换
+            // The button text is fixed in English and does not change with the language
             title={
               cardImageLanguage === CardImageLanguage.ENGLISH ? 'Switch to Chinese Card' : 'Switch to English Card'
             }
@@ -259,7 +255,7 @@ ${safeCard.flavor ? `> ${safeCard.flavor}` : ''}
             onAction={toggleCardImageLanguage}
           />
           {/*          <Action
-            // 按钮文本固定为英文，不随语言切换
+            // The button text is fixed in English and does not change with the language
             title={uiLanguage === 'enUS' ? 'Switch to Chinese UI' : 'Switch to English UI'}
             icon={Icon.Text}
             onAction={toggleUILanguage}
@@ -277,5 +273,5 @@ ${safeCard.flavor ? `> ${safeCard.flavor}` : ''}
         </ActionPanel>
       }
     />
-  );
+  )
 }
