@@ -1,6 +1,8 @@
 import { Action, ActionPanel, Grid, Icon, showToast } from "@raycast/api";
 import { showFailureToast } from "@raycast/utils";
 import { useEffect, useState } from "react";
+import { formatCardSetName } from "./utils/card-set";
+import { getDefaultCardImageLanguage } from "./preferences";
 import { CardDetailView } from "./components/card-detail-view";
 import { Card, ClassName } from "./types/types";
 import { getLocalCardData } from "./utils/utils";
@@ -10,7 +12,7 @@ export default function CardListCommand() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchByCost, setSearchByCost] = useState<string>("all");
-  const [language, setLanguage] = useState<"enUS" | "zhCN">("enUS");
+  const [language, setLanguage] = useState<"enUS" | "zhCN">(getDefaultCardImageLanguage);
   const [searchByClass, setSearchByClass] = useState<string>("all");
   const [searchBySet, setSearchBySet] = useState<string>("all");
   const [allCardData, setAllCardData] = useState<Card[]>([]);
@@ -27,10 +29,12 @@ export default function CardListCommand() {
   const classes = ["all", ...Object.values(ClassName), "NEUTRAL"];
 
   useEffect(() => {
+    let cancelled = false;
     const loadAllCardData = async () => {
       try {
         setIsLoading(true);
         const data = await getLocalCardData(language);
+        if (cancelled) return;
 
         setAllCardData(data);
 
@@ -50,13 +54,16 @@ export default function CardListCommand() {
 
         setIsLoading(false);
       } catch (error) {
-        showFailureToast(error, { title: "Error loading card data" });
+        if (!cancelled) showFailureToast(error, { title: "Error loading card data" });
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
 
     loadAllCardData();
+    return () => {
+      cancelled = true;
+    };
   }, [language]);
 
   // Handling filter changes
@@ -155,7 +162,7 @@ export default function CardListCommand() {
       searchText={searchTerm}
       onSearchTextChange={setSearchTerm}
       searchBarAccessory={
-        <Grid.Dropdown tooltip="Select Filters" onChange={handleFilterChange}>
+        <Grid.Dropdown tooltip="Select Filters" defaultValue={`${language}_lang_`} onChange={handleFilterChange}>
           <Grid.Dropdown.Section title="Language">
             <Grid.Dropdown.Item title="English" value={`enUS_lang_`} />
             <Grid.Dropdown.Item title="Chinese" value={`zhCN_lang_`} />
@@ -175,7 +182,7 @@ export default function CardListCommand() {
             {classes.map((className) => (
               <Grid.Dropdown.Item
                 key={`class_${className}`}
-                title={className === "all" ? "All Classes" : className}
+                title={className === "all" ? "All Classes" : className === "NEUTRAL" ? "Neutral" : className}
                 value={`${language}_class_${className}`}
               />
             ))}
@@ -185,7 +192,7 @@ export default function CardListCommand() {
             {uniqueSets.map((set) => (
               <Grid.Dropdown.Item
                 key={`set_${set}`}
-                title={set === "all" ? "All Sets" : set}
+                title={set === "all" ? "All Sets" : formatCardSetName(set)}
                 value={`${language}_set_${set}`}
               />
             ))}

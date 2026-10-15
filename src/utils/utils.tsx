@@ -1,6 +1,5 @@
 import { Image, LocalStorage } from "@raycast/api";
 import { showFailureToast } from "@raycast/utils";
-import axios from "axios";
 import { Card, ClassName, Deck, MatchResult } from "../types/types";
 
 export const classIcon = (className: ClassName) => {
@@ -125,7 +124,7 @@ export const findCard = (
   return matchResults.length > 0 ? matchResults[0].card : null;
 };
 
-// Use axios to get card data
+// Use Fetch to avoid Node HTTP stream APIs unavailable in Tinycast
 export const getLocalCardData = async (language: "enUS" | "zhCN" = "enUS") => {
   try {
     const cacheKey = `cards_data_${language}`;
@@ -139,9 +138,12 @@ export const getLocalCardData = async (language: "enUS" | "zhCN" = "enUS") => {
 
     // If there is no data in LocalStorage, try to get it from the API
     console.log(`No card data found in LocalStorage for ${language}, fetching from API...`);
-    const response = await axios.get(`https://api.hearthstonejson.com/v1/latest/${language}/cards.json`);
+    const response = await fetch(`https://api.hearthstonejson.com/v1/latest/${language}/cards.json`);
+    if (!response.ok) {
+      throw new Error(`Card data request failed: HTTP ${response.status} ${response.statusText}`);
+    }
 
-    const cardData = response.data;
+    const cardData: Card[] = await response.json();
 
     // Store the acquired data in LocalStorage for next use
     try {

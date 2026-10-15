@@ -5,7 +5,7 @@ import { CardImageLanguage, getDefaultCardImageLanguage } from "../preferences";
 import { Card, CardDetailViewProps, CardSlot } from "../types/types";
 import { getLocalCardData } from "../utils/utils";
 
-export function CardDetailView({ slot = {}, card = null, language = "enUS" }: CardDetailViewProps) {
+export function CardDetailView({ slot = {}, card = null, language }: CardDetailViewProps) {
   const safeSlot: CardSlot = {
     card: {
       name: slot?.card?.name || "Unknown",
@@ -40,22 +40,21 @@ export function CardDetailView({ slot = {}, card = null, language = "enUS" }: Ca
   });
 
   const [cardImageLanguage, setCardImageLanguage] = useState<CardImageLanguage>(
-    language === "enUS" ? CardImageLanguage.ENGLISH : CardImageLanguage.CHINESE,
+    () => (language as CardImageLanguage | undefined) ?? getDefaultCardImageLanguage(),
   );
-
-  // Adding independent state for UI language
-  const [uiLanguage, setUiLanguage] = useState<"enUS" | "zhCN">(language === "enUS" ? "enUS" : "zhCN");
+  const uiLanguage = cardImageLanguage;
 
   // Re-fetch card data when the card language changes
   useEffect(() => {
+    let cancelled = false;
     const fetchCardData = async () => {
       try {
         if (safeCard.id) {
           const allCards = await getLocalCardData(cardImageLanguage === CardImageLanguage.ENGLISH ? "enUS" : "zhCN");
           const updatedCard = allCards.find((c: Card) => c.id === safeCard.id || c.dbfId === safeCard.dbfId);
-          if (updatedCard) {
-            setSafeCard({
-              ...safeCard,
+          if (updatedCard && !cancelled) {
+            setSafeCard((current) => ({
+              ...current,
               name: updatedCard.name || safeCard.name,
               text: updatedCard.text || safeCard.text,
               flavor: updatedCard.flavor || safeCard.flavor,
@@ -64,26 +63,19 @@ export function CardDetailView({ slot = {}, card = null, language = "enUS" }: Ca
               rarity: updatedCard.rarity || safeCard.rarity,
               faction: updatedCard.faction || safeCard.faction,
               mechanics: updatedCard.mechanics || safeCard.mechanics,
-            });
+            }));
           }
         }
       } catch (error) {
-        showFailureToast("Failed to fetch card data");
+        if (!cancelled) showFailureToast(error, { title: "Failed to fetch card data" });
       }
     };
     fetchCardData();
+    return () => {
+      cancelled = true;
+    };
   }, [cardImageLanguage]);
 
-  // useEffect(() => {
-  //   const defaultLanguage = getDefaultCardImageLanguage();
-  //   setCardImageLanguage(defaultLanguage);
-  //   setUiLanguage(defaultLanguage === CardImageLanguage.ENGLISH ? 'enUS' : 'zhCN');
-  // }, []);
-
-  useEffect(() => {
-    const defaultLanguage = getDefaultCardImageLanguage();
-    setCardImageLanguage(defaultLanguage);
-  }, []);
   // const cardId = safeCard.id
   // const dbfId = safeCard.dbfId.toString()
   const cardName = safeCard.name;
@@ -206,7 +198,6 @@ export function CardDetailView({ slot = {}, card = null, language = "enUS" }: Ca
     setCardImageLanguage(
       cardImageLanguage === CardImageLanguage.ENGLISH ? CardImageLanguage.CHINESE : CardImageLanguage.ENGLISH,
     );
-    setUiLanguage(cardImageLanguage === CardImageLanguage.ENGLISH ? "zhCN" : "enUS");
   };
 
   // const toggleUILanguage = () => {

@@ -1,5 +1,4 @@
 import { Cache } from "@raycast/api";
-import axios from "axios";
 import * as cheerio from "cheerio";
 import { CardSlot, ClassName, Deck, Rarity } from "../types/types";
 import { CacheEntry } from "./utils";
@@ -70,8 +69,11 @@ const saveToCache = (cacheKey: string, decks: Deck[]) => {
 };
 
 export const fetchDecks = async (url: string) => {
-  const response = await axios.get(url);
-  const $ = cheerio.load(response.data);
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HSGuru request failed: HTTP ${response.status} ${response.statusText}`);
+  }
+  const $ = cheerio.load(await response.text());
   const elements = $("div.card");
   const decks: Deck[] = [];
   elements.each((_, el) => {
